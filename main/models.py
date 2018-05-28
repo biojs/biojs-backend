@@ -29,6 +29,13 @@ class Component(models.Model):
     github_url = models.URLField(null=True)
     short_description = models.TextField(null=True)
     url_name = models.SlugField(null=True, unique=True)
+    commits = models.IntegerField(default=0)
+    forks = models.IntegerField(default=0)
+    wwatchers = models.IntegerField(default=0)
+    no_of_contributors = models.IntegerField(default=0)
+    version = models.CharField(max_length=20, null=True)
+    no_of_releases = models.IntegerField(default=0)
+    open_issues = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -48,3 +55,16 @@ class Tag(models.Model):
 
     def __unicode__(self):
         return self.name
+
+class Contributor(models.Model):
+    username = models.CharField(max_length=100)
+    avatar_url = models.URLField()
+    components = models.ManyToManyField(Component, through="Contribution")
+
+    def __unicode__(self):
+        return self.username
+
+class Contribution(models.Model):
+    contributor = models.ForeignKey(Contributor, on_delete=models.SET_NULL, null=True)
+    component = models.ForeignKey(Component, on_delete=models.SET_NULL, null=True)
+    contributions = models.IntegerField(default=0)
