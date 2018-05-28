@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from .serializers import *
 from django.http import JsonResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponse
 
 def index(request):
     top_dl_components = Component.objects.all().order_by('-downloads')[:3]
@@ -14,3 +16,9 @@ def index(request):
         'top_starred_components':starred.data,
         'most_recent_components':recent.data,
         })
+
+@staff_member_required
+def update_data(request):
+    for component in Component.objects.all(): ### More to come here
+            print component.name
+    return HttpResponse("Database Successfully Updated.")
