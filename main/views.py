@@ -17,6 +17,29 @@ def index(request):
         'most_recent_components':recent.data,
         })
 
+def all_components(request):    # requested on_load() for querying
+    all_components = BaseComponentSerializer(Component.objects.all(), many=True)
+    print all_components
+    return JsonResponse({
+        'all_components':all_components.data,
+        })
+
+def top_components(request):
+    top_components = TopComponentSerializer(Component.objects.all().order_by('-downloads')[:10], many=True, context={'request':request})
+    print top_components
+    return JsonResponse({
+        'top_components':top_components.data,
+        })
+
+def component_details(request, url_name):
+    component = Component.objects.get(url_name=url_name)
+    details = DetailComponentSerializer(component, context={'request':request})
+    contributions = ContributionSerializer(Contribution.objects.filter(component=component), many=True)
+    return JsonResponse({
+        'details' : details.data,
+        'contributors' : contributions.data,
+    })
+
 @staff_member_required
 def update_data(request):
     for component in Component.objects.all(): ### More to come here
