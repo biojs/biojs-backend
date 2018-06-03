@@ -5,7 +5,7 @@ class DownloadSerializer(serializers.ModelSerializer):
     property = serializers.SerializerMethodField()
 
     def get_property(self, component):
-        return component.downloads
+        return component.forks
 
     class Meta:
         model = Component
