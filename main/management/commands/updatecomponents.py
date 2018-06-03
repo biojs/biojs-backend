@@ -1,7 +1,11 @@
 from django.core.management import BaseCommand
 import urllib2, json, urllib
 from main.models import *
-from biojs.config import *
+try:
+    from biojs.config import *
+except:
+    GITHUB_CLIENT_ID = ''
+    GITHUB_CLIENT_SECRET = ''
 from datetime import datetime
 import pytz
 
