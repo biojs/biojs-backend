@@ -33,7 +33,7 @@ class Command(BaseCommand):
     help = "Command to update the details of all the components from Github"
 
     def handle(self, *args, **options):
-        all_components = get_npm_data()['objects'][:5]
+        all_components = get_npm_data()['objects']
         for component in all_components:
             component_data = component['package']
             try:
