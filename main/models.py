@@ -18,7 +18,7 @@ def get_remote_image(self):
         self.save()
 
 class Component(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     stars = models.IntegerField(default=0, null=True)
     downloads = models.BigIntegerField(default=0, null=True)
     created_time = models.DateTimeField(editable=False, null=True)
@@ -36,7 +36,7 @@ class Component(models.Model):
     version = models.CharField(max_length=50, null=True)
     no_of_releases = models.IntegerField(default=0)
     open_issues = models.IntegerField(default=0)
-    author = models.CharField(max_length=50, null=True)
+    author = models.CharField(max_length=200, null=True)
     author_email = models.EmailField(null=True)
     npm_url = models.URLField(null=True)
     homepage_url = models.URLField(null=True)
