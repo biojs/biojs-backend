@@ -28,7 +28,7 @@ class Component(models.Model):
     icon = models.ImageField(null=True, upload_to='icons/')
     github_url = models.URLField(null=True)
     short_description = models.TextField(null=True)
-    url_name = models.SlugField(null=True, unique=True)
+    url_name = models.SlugField(null=True, unique=True, max_length=255)
     commits = models.IntegerField(default=0, null=True)
     forks = models.IntegerField(default=0, null=True)
     watchers = models.IntegerField(default=0, null=True)
