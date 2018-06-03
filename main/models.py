@@ -33,20 +33,18 @@ class Component(models.Model):
     forks = models.IntegerField(default=0, null=True)
     watchers = models.IntegerField(default=0, null=True)
     no_of_contributors = models.IntegerField(default=0, null=True)
-    version = models.CharField(max_length=20, null=True)
+    version = models.CharField(max_length=50, null=True)
     no_of_releases = models.IntegerField(default=0)
     open_issues = models.IntegerField(default=0)
     author = models.CharField(max_length=50, null=True)
     author_email = models.EmailField(null=True)
     npm_url = models.URLField(null=True)
     homepage_url = models.URLField(null=True)
-    license = models.CharField(max_length=20, null=True)
+    license = models.CharField(max_length=50, null=True)
 
     def save(self, *args, **kwargs):
         if not self.id:
             self.created_time = timezone.now()
-        if not self.icon:
-            get_remote_image(self)
         if not self.url_name:
             self.url_name = (str(self.name).replace(' ', '-')).lower()
         return super(Component, self).save(*args, **kwargs)
