@@ -22,7 +22,7 @@ class Component(models.Model):
     stars = models.IntegerField(default=0, null=True)
     downloads = models.BigIntegerField(default=0, null=True)
     created_time = models.DateTimeField(editable=False, null=True)
-    modified_time = models.DateTimeField()
+    modified_time = models.DateTimeField(null=True)
     tags = models.ManyToManyField('Tag', null=True)
     icon_url = models.URLField(null=True, blank=True)
     icon = models.ImageField(null=True, upload_to='icons/')
