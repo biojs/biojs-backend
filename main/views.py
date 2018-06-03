@@ -3,6 +3,7 @@ from .serializers import *
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
+import urllib, json
 
 def index(request):
     top_dl_components = Component.objects.all().order_by('-downloads')[:3]
@@ -42,6 +43,7 @@ def component_details(request, url_name):
 
 @staff_member_required
 def update_data(request):
-    for component in Component.objects.all(): ### More to come here
-            print component.name
+    response = urllib.urlopen("https://api.npms.io/v2/search?q=keywords:biojs")
+    print response.read()
+    data = json.load(response)
     return HttpResponse("Database Successfully Updated.")
