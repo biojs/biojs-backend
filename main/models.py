@@ -45,7 +45,6 @@ class Component(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.created_time = timezone.now()
-        self.modified_time = timezone.now()
         if not self.icon:
             get_remote_image(self)
         if not self.url_name:
