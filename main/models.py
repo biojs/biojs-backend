@@ -53,7 +53,7 @@ class Component(models.Model):
         return self.name
 
 class Tag(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=50)
 
     def __unicode__(self):
         return self.name
