@@ -5,7 +5,7 @@ class DownloadSerializer(serializers.ModelSerializer):
     property = serializers.SerializerMethodField()
 
     def get_property(self, component):
-        return component.forks
+        return component.downloads
 
     class Meta:
         model = Component
@@ -39,13 +39,6 @@ class TopComponentSerializer(serializers.ModelSerializer):  # Data fields when v
         for t in obj.tags.all():
             tags.append(t.name)
         return tags
-    def get_icon_url(self, obj):
-        if obj.icon:
-            request = self.context.get('request')
-            icon_url =  obj.icon.url
-            return request.build_absolute_uri(icon_url)
-        else:
-            return '#'
     class Meta:
         model = Component
         fields = ('name', 'tags', 'icon_url', 'downloads', 'stars', 'modified_time', 'short_description', 'id', 'url_name', 'author')
