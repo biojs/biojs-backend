@@ -52,19 +52,11 @@ class TopComponentSerializer(serializers.ModelSerializer):  # Data fields when v
 
 class DetailComponentSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
-    icon_url = serializers.SerializerMethodField()
     def get_tags(self, obj):
         tags = []
         for t in obj.tags.all():
             tags.append(t.name)
         return tags
-    def get_icon_url(self, obj):
-        if obj.icon:
-            request = self.context.get('request')
-            icon_url =  obj.icon.url
-            return request.build_absolute_uri(icon_url)
-        else:
-            return '#'
     class Meta:
         model = Component
         fields = (
@@ -106,8 +98,8 @@ class ContributorSerializer(serializers.ModelSerializer):
         fields = ('username', 'avatar_url')
 
 class ContributionSerializer(serializers.ModelSerializer):
-    contributor = ContributorSerializer(required=True, write_only=True)
+    contributor = ContributorSerializer(read_only=True)
 
     class Meta:
         model = Contribution
-        fields = ('contributor', 'contributions')
+        fields = ('contributor', 'contributions', 'id')

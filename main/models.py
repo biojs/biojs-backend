@@ -46,7 +46,7 @@ class Component(models.Model):
         if not self.id:
             self.created_time = timezone.now()
         if not self.url_name:
-            self.url_name = (str(self.name).replace(' ', '-')).lower()
+            self.url_name = (str(self.name).replace(' ', '-')).replace('/', '-').lower()
         return super(Component, self).save(*args, **kwargs)
 
     def __unicode__(self):
