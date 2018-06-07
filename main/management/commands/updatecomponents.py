@@ -27,6 +27,16 @@ def get_contributors_data(contributors_url):
     data = json.load(response)
     return data
 
+def get_downloads(downloads_url):
+    import ast
+    print downloads_url
+    response = urllib.urlopen(downloads_url)
+    downloads = 0
+    data = ast.literal_eval(response.read())
+    for download in data:
+        downloads += int(download['download_count'])
+    return downloads
+
 
 class Command(BaseCommand):
     # during --help
@@ -123,6 +133,7 @@ class Command(BaseCommand):
                         _contribution = Contribution.objects.create(component=_component, contributor=_contributor, contributions=contributor["contributions"])
                     commits += _contribution.contributions
                     count +=1
+                _component.downloads = get_downloads(str(github_data['downloads_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
                 _component.commits = commits
                 _component.no_of_contributors = count
                 _component.save()
