@@ -33,7 +33,6 @@ class RecentComponentSerializer(serializers.ModelSerializer):
 
 class TopComponentSerializer(serializers.ModelSerializer):  # Data fields when viewing the overall top components
     tags = serializers.SerializerMethodField()
-    icon_url = serializers.SerializerMethodField()
     def get_tags(self, obj):
         tags = []
         for t in obj.tags.all():
