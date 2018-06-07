@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 import urllib, json
+from django.core.management import call_command
 
 def index(request):
     top_dl_components = Component.objects.all().order_by('-downloads')[:3]
@@ -26,7 +27,7 @@ def all_components(request):    # requested on_load() for querying
         })
 
 def top_components(request):
-    top_components = TopComponentSerializer(Component.objects.all().order_by('-downloads')[:10], many=True, context={'request':request})
+    top_components = TopComponentSerializer(Component.objects.all().order_by('-downloads')[:10], many=True)
     print top_components
     return JsonResponse({
         'top_components':top_components.data,
@@ -43,7 +44,5 @@ def component_details(request, url_name):
 
 @staff_member_required
 def update_data(request):
-    response = urllib.urlopen("https://api.npms.io/v2/search?q=keywords:biojs")
-    print response.read()
-    data = json.load(response)
+    call_command('updatecomponents')
     return HttpResponse("Database Successfully Updated.")
