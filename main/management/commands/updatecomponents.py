@@ -115,6 +115,13 @@ class Command(BaseCommand):
                     _component.license = github_data['license']['name']
                 except:
                     pass
+                try:
+                    str_date = github_data['created_at']
+                    req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%SZ") #This object is timezone unaware
+                    aware_date = pytz.utc.localize(req_date)    #This object is now timezone aware
+                    _component.created_time = aware_date
+                except:
+                    pass
                 _component.save()
                 print str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
                 contributors_data = get_contributors_data(str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)

@@ -25,9 +25,9 @@ SECRET_KEY = '$&&+$xz)50khd6q+aq&95r1$2urmmdv37=-*lu3v-wwh46829t'
 # SECURITY WARNING: don't run with debug turned on in production!
 try:
     from config import *
-    DEBUG = False
+    DEBUG = DEBUG
 except:
-    DEBUG = True
+    DEGUB = True
 
 ALLOWED_HOSTS = ['*']
 
