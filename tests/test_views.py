@@ -16,7 +16,7 @@ class IndexViewTest(TestCase):
 		number_of_components = 10
 		for component_no in range(number_of_components):
 			Component.objects.create(name='component'+str(component_no), downloads=random.randint(0,50), stars=random.randint(0,50), modified_time=pytz.utc.localize(datetime.now()))
-			sleep(0.5)
+			# sleep(0.5)
 
 	def test_view_url_exists_at_desired_location(self):
 		response = self.client.get('/')
@@ -35,3 +35,96 @@ class IndexViewTest(TestCase):
 		self.assertTrue(len(response.json()['most_recent_components'])<4)
 		self.assertTrue(len(response.json()['top_dl_components'])<4)
 		self.assertTrue(len(response.json()['top_starred_components'])<4)
+		# Test if all the required fields are present in the response
+		for object in response.json()['most_recent_components']:
+			self.assertTrue('name' in object and 
+							'property' in object and
+							'id' in object and
+							'url_name' in object
+						)
+
+		for object in response.json()['top_dl_components']:
+			self.assertTrue('name' in object and 
+							'property' in object and
+							'id' in object and
+							'url_name' in object
+						)
+
+		for object in response.json()['top_starred_components']:
+			self.assertTrue('name' in object and
+							'property' in object and
+							'id' in object and
+							'url_name' in object
+						)
+
+class TopComponentViewTest(TestCase):
+
+	@classmethod
+	def setUpTestData(cls):
+		# Called initially when test is executed, create objects to be used by test methods
+		# create 10 random objects
+		number_of_components = 20
+		for component_no in range(number_of_components):
+			Component.objects.create(name='component'+str(component_no), downloads=random.randint(0,50), stars=random.randint(0,50), modified_time=pytz.utc.localize(datetime.now()))
+			# sleep(0.5)
+
+	def test_view_url_exists_at_desired_location(self):
+		response = self.client.get('/top/')
+		self.assertEqual(response.status_code, 200)
+
+	def test_view_accessible_by_name(self):
+		response = self.client.get(reverse('main:top_components'))
+		self.assertEqual(response.status_code, 200)
+
+	# Tests whether the relevant keys are present in the json response and length of each list is maximum 10
+	def test_relevance_of_response(self):
+		response = self.client.get(reverse('main:top_components'))
+		self.assertTrue('top_components' in response.json())
+		self.assertTrue(len(response.json()['top_components'])<11)
+		# Test if all the required fields are present in the response
+		for object in response.json()['top_components']:
+			self.assertTrue(
+					'name' in object and
+					'tags' in object and
+					'icon_url' in object and
+					'downloads' in object and
+					'stars' in object and
+					'modified_time' in object and
+					'short_description' in object and
+					'id' in object and
+					'url_name' in object and
+					'author' in object
+				)
+
+class AllComponentViewTest(TestCase):
+
+	@classmethod
+	def setUpTestData(cls):
+		# Called initially when test is executed, create objects to be used by test methods
+		# create 10 random objects
+		number_of_components = 20
+		for component_no in range(number_of_components):
+			Component.objects.create(name='component'+str(component_no), downloads=random.randint(0,50), stars=random.randint(0,50), modified_time=pytz.utc.localize(datetime.now()))
+			# sleep(0.5)
+
+	def test_view_url_exists_at_desired_location(self):
+		response = self.client.get('/all/')
+		self.assertEqual(response.status_code, 200)
+
+	def test_view_accessible_by_name(self):
+		response = self.client.get(reverse('main:all_components'))
+		self.assertEqual(response.status_code, 200)
+
+	# Tests whether the relevant keys are present in the json response and length of response list is same as number of components in database
+	def test_relevance_of_response(self):
+		response = self.client.get(reverse('main:all_components'))
+		self.assertTrue('all_components' in response.json())
+		self.assertEqual(len(response.json()['all_components']), Component.objects.all().count())
+		# Test if all the required fields are present in the response
+		for object in response.json()['all_components']:
+			self.assertTrue(
+					'name' in object and
+					'tags' in object and
+					'id' in object and
+					'url_name' in object
+				)

@@ -21,14 +21,12 @@ def index(request):
 
 def all_components(request):    # requested on_load() for querying
     all_components = BaseComponentSerializer(Component.objects.all(), many=True)
-    print all_components
     return JsonResponse({
         'all_components':all_components.data,
         })
 
 def top_components(request):
     top_components = TopComponentSerializer(Component.objects.all().order_by('-downloads')[:10], many=True)
-    print top_components
     return JsonResponse({
         'top_components':top_components.data,
         })
