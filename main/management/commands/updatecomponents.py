@@ -43,7 +43,7 @@ class Command(BaseCommand):
     help = "Command to update the details of all the components from Github"
 
     def handle(self, *args, **options):
-        all_components = get_npm_data()['objects']
+        all_components = get_npm_data()['objects'][:5]
         for component in all_components:
             component_data = component['package']
             try:
@@ -117,7 +117,7 @@ class Command(BaseCommand):
                     pass
                 try:
                     str_date = github_data['created_at']
-                    req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%S.%fZ") #This object is timezone unaware
+                    req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%SZ") #This object is timezone unaware
                     aware_date = pytz.utc.localize(req_date)    #This object is now timezone aware
                     _component.created_time = aware_date
                 except:
