@@ -278,6 +278,9 @@ class DetailComponentViewTest(TestCase):
 			)
 		# check if number of commits >= 50, from the time the tests were initiated
 		self.assertTrue(int(response.json()['details']['commits']) >= 50)
+
+		# modified date should be after created date
+		self.assertTrue(response.json()['details']['created_time'] <= response.json()['details']['modified_time'])
 		# check if number of contributors is same as contributors added
 		self.assertEqual(response.json()['details']['no_of_contributors'], Contribution.objects.filter(component=Component.objects.get(name='biojs-vis-rohart-msc-test')).count())
 		self.assertEqual(response.json()['details']['no_of_contributors'], len(response.json()['contributors']))
