@@ -6,6 +6,9 @@ import random
 from time import sleep
 from datetime import datetime
 import pytz
+import urllib, urllib2
+import json
+import ast
 
 class IndexViewTest(TestCase):
 
@@ -135,41 +138,121 @@ class DetailComponentViewTest(TestCase):
 	def setUpTestData(cls):
 		# Called initially when test is executed, create objects to be used by test methods
 		# create a random object
-		component = Component.objects.create(
-				name = "testComponent",
-				stars = random.randint(0, 20),
-				downloads = random.randint(0, 20),
-				created_time = pytz.utc.localize(datetime.now()),
-				modified_time = pytz.utc.localize(datetime.now()),
-				no_of_contributors = 2,
-				license = 'MIT'
-			)
-		contributor1 = Contributor.objects.create(
-				username = "contributor1",
-				avatar_url = "https://avatars1.githubusercontent.com/u/11511612?v=4"
-			)
-		contributions1 = random.randint(0,100)
-		Contribution.objects.create(contributor=contributor1, component=component, contributions=contributions1)
-		contributor2 = Contributor.objects.create(
-				username = "contributor2",
-				avatar_url = "https://avatars1.githubusercontent.com/u/11511612?v=4"
-			)
-		contributions2 = random.randint(0,100)
-		Contribution.objects.create(contributor=contributor2, component=component, contributions=contributions2)
-		component.commits = contributions1 + contributions2
-		component.save()
+		hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
+		req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=biojs-vis-rohart-msc-test", headers=hdr)
+		response = urllib2.urlopen(req)
+		data = json.load(response)
+		for component in data['objects']:
+			component_data = component['package']
+			_component = Component.objects.create(name=component_data['name'])
+			try:
+			    _component.version = component_data['version']
+			except:
+			    pass
+			try:
+			    _component.short_description = component_data['description']
+			except:
+			    pass
+			try:
+			    tags = component_data['keywords']
+			except:
+			    tags = []
+			for tag in tags:
+			    try:
+			        _tag = Tag.objects.get(name=tag)
+			    except:
+			        _tag = Tag.objects.create(name=tag)
+			        _component.tags.add(_tag)
+			    if not _tag in _component.tags.all():
+			        _component.tags.add(_tag)
+			try:
+			    str_date = component_data['date']
+			    req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%S.%fZ") #This object is timezone unaware
+			    aware_date = pytz.utc.localize(req_date)    #This object is now timezone aware
+			    _component.modified_time = aware_date
+			except:
+			    pass
+			try:
+			    _component.npm_url = component_data['links']['npm']
+			except:
+			    pass
+			try:
+			    _component.homepage_url = component_data['links']['homepage']
+			except:
+			    pass
+			try:
+			    github_url = component_data['links']['repository']
+			    url_list = github_url.split('/')
+			    _component.github_url = 'https://api.github.com/repos/' + str(url_list[3]) + '/' + str(url_list[4])
+			except:
+			    pass
+			try:
+			    _component.author = component_data['author']['name']
+			except:
+			    pass
+			try:
+			    _component.author_email = component_data['author']['email']
+			except:
+			    pass
+			_component.save()
+
+			if _component.github_url:
+				response = urllib.urlopen(_component.github_url)
+				github_data = json.load(response)
+				_component.stars = github_data['stargazers_count']
+				_component.forks = github_data['forks']
+				_component.watchers = github_data['watchers']
+				_component.icon_url = github_data['owner']['avatar_url']
+				_component.open_issues = github_data['open_issues']
+				try:
+				    _component.license = github_data['license']['name']
+				except:
+				    pass
+				try:
+				    str_date = github_data['created_at']
+				    req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%SZ") #This object is timezone unaware
+				    aware_date = pytz.utc.localize(req_date)    #This object is now timezone aware
+				    _component.created_time = aware_date
+				except:
+				    pass
+				_component.save()
+				contributors_data = json.load(urllib.urlopen(str(github_data['contributors_url'])))
+				commits = 0
+				count = 0
+				for contributor in contributors_data:
+					try:
+					    _contributor = Contributor.objects.get(username=contributor["login"])
+					except:
+					    _contributor = Contributor.objects.create(username=contributor["login"], avatar_url=contributor["avatar_url"])
+					try:
+					    _contribution = Contribution.objects.get(component=_component, contributor=_contributor)
+					    _contribution.contributions = contributor["contributions"]
+					    _contribution.save()
+					except:
+					    _contribution = Contribution.objects.create(component=_component, contributor=_contributor, contributions=contributor["contributions"])
+					commits += _contribution.contributions
+					count +=1
+				response = urllib.urlopen(github_data['downloads_url'])
+				downloads = 0
+				data = ast.literal_eval(response.read())
+				for download in data:
+				    downloads += int(download['download_count'])
+				_component.downloads = downloads
+				_component.commits = commits
+				_component.no_of_contributors = count
+				_component.save()
 
 	def test_view_url_exists_at_desired_location(self):
-		response = self.client.get('/details/testcomponent/')
+		response = self.client.get('/details/biojs-vis-rohart-msc-test/')
 		self.assertEqual(response.status_code, 200)
 
 	def test_view_accessible_by_name(self):
-		response = self.client.get(reverse('main:component_details', kwargs={'url_name':'testcomponent'}))
+		response = self.client.get(reverse('main:component_details', kwargs={'url_name':'biojs-vis-rohart-msc-test'}))
 		self.assertEqual(response.status_code, 200)
 
 	# Tests whether the relevant keys are present in the json response and length of response list is same as number of components in database
 	def test_relevance_of_response(self):
-		response = self.client.get(reverse('main:component_details', kwargs={'url_name':'testcomponent'}))
+		response = self.client.get(reverse('main:component_details', kwargs={'url_name':'biojs-vis-rohart-msc-test'}))
 		self.assertTrue('details' in response.json())
 		# Test if all the required fields are present in the response
 		object = response.json()['details']
@@ -193,8 +276,10 @@ class DetailComponentViewTest(TestCase):
 				'author' in object and
 				'license' in object
 			)
+		# check if number of commits >= 50, from the time the tests were initiated
+		self.assertTrue(int(response.json()['details']['commits']) >= 50)
 		# check if number of contributors is same as contributors added
-		self.assertEqual(response.json()['details']['no_of_contributors'], Contribution.objects.filter(component=Component.objects.get(name='testComponent')).count())
+		self.assertEqual(response.json()['details']['no_of_contributors'], Contribution.objects.filter(component=Component.objects.get(name='biojs-vis-rohart-msc-test')).count())
 		self.assertEqual(response.json()['details']['no_of_contributors'], len(response.json()['contributors']))
 		for object in response.json()['contributors']:
 			self.assertTrue(
