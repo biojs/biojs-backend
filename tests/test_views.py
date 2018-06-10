@@ -277,6 +277,7 @@ class DetailComponentViewTest(TestCase):
 				'license' in object
 			)
 		# check if number of commits >= 50, from the time the tests were initiated
+		### As number of stars, watchers might go down in the future so they haven't been tested
 		self.assertTrue(int(response.json()['details']['commits']) >= 50)
 
 		# modified date should be after created date
