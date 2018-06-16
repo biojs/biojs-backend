@@ -68,5 +68,5 @@ class Contributor(models.Model):
 
 class Contribution(models.Model):
     contributor = models.ForeignKey(Contributor, on_delete=models.SET_NULL, null=True)
-    component = models.ForeignKey(Component, on_delete=models.SET_NULL, null=True)
+    component = models.ForeignKey(Component, on_delete=models.SET_NULL, null=True, related_name='contributions')
     contributions = models.IntegerField(default=0)
