@@ -21,7 +21,7 @@ class Component(models.Model):
     name = models.CharField(max_length=100)
     stars = models.IntegerField(default=0, null=True)
     downloads = models.BigIntegerField(default=0, null=True)
-    created_time = models.DateTimeField(editable=False, null=True)
+    created_time = models.DateTimeField(null=True)
     modified_time = models.DateTimeField(null=True)
     tags = models.ManyToManyField('Tag', null=True)
     icon_url = models.URLField(null=True, blank=True)
@@ -43,8 +43,6 @@ class Component(models.Model):
     license = models.CharField(max_length=50, null=True)
 
     def save(self, *args, **kwargs):
-        if not self.id:
-            self.created_time = timezone.now()
         if not self.url_name:
             self.url_name = (str(self.name).replace(' ', '-')).replace('/', '-').replace('@','').lower()
         return super(Component, self).save(*args, **kwargs)

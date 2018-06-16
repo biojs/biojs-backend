@@ -44,17 +44,28 @@ class TopComponentSerializer(serializers.ModelSerializer):  # Data fields when v
 
 class DetailComponentSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
+    github_url = serializers.SerializerMethodField()
+
     def get_tags(self, obj):
         tags = []
         for t in obj.tags.all():
             tags.append(t.name)
         return tags
+
+    def get_github_url(self, obj):
+        if obj.github_url:
+            list_url = obj.github_url.split('/')
+            return list_url[0] + '//github.com/' + list_url[4] + '/' + list_url[5].split('?')[0] #  remove get request params(client_id and secret)
+        else:
+            return ''
+
     class Meta:
         model = Component
         fields = (
                 'name',
                 'stars',
                 'downloads',
+                'created_time',
                 'modified_time',
                 'tags',
                 'icon_url',
@@ -65,11 +76,9 @@ class DetailComponentSerializer(serializers.ModelSerializer):
                 'forks',
                 'watchers',
                 'no_of_contributors',
+                'open_issues',
                 'version',
                 'author',
-                'author_email',
-                'npm_url',
-                'homepage_url',
                 'license',
             )
 

@@ -27,8 +27,8 @@ def all_components(request):    # requested on_load() for querying
         })
 
 def top_components(request):
-    top_components = TopComponentSerializer(Component.objects.all().order_by('-downloads')[:10], many=True)
-    print top_components
+    # Download data is from Github and hence stars are used
+    top_components = TopComponentSerializer(Component.objects.all().order_by('-stars')[:10], many=True)
     return JsonResponse({
         'top_components':top_components.data,
         })

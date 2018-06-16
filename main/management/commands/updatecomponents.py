@@ -105,19 +105,33 @@ class Command(BaseCommand):
 
             if _component.github_url:
                 print _component.github_url
-                github_data = get_github_data(_component.github_url)
+                try:
+                    github_data = get_github_data(_component.github_url)
+                except:
+                    continue
                 _component.stars = github_data['stargazers_count']
                 _component.forks = github_data['forks']
-                _component.watchers = github_data['watchers']
+                # subscriber_count
+                _component.watchers = github_data['subscribers_count']
                 _component.icon_url = github_data['owner']['avatar_url']
                 _component.open_issues = github_data['open_issues']
                 try:
                     _component.license = github_data['license']['name']
                 except:
                     pass
+                try:
+                    str_date = github_data['created_at']
+                    req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%SZ") #This object is timezone unaware
+                    aware_date = pytz.utc.localize(req_date)    #This object is now timezone aware
+                    _component.created_time = aware_date
+                except:
+                    pass
                 _component.save()
                 print str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
-                contributors_data = get_contributors_data(str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
+                try:
+                    contributors_data = get_contributors_data(str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
+                except:
+                    continue
                 commits = 0
                 count = 0
                 for contributor in contributors_data:
@@ -133,7 +147,10 @@ class Command(BaseCommand):
                         _contribution = Contribution.objects.create(component=_component, contributor=_contributor, contributions=contributor["contributions"])
                     commits += _contribution.contributions
                     count +=1
-                _component.downloads = get_downloads(str(github_data['downloads_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
+                try:
+                    _component.downloads = get_downloads(str(github_data['downloads_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
+                except:
+                    pass
                 _component.commits = commits
                 _component.no_of_contributors = count
                 _component.save()
