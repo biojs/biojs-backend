@@ -41,6 +41,8 @@ class Component(models.Model):
     npm_url = models.URLField(null=True)
     homepage_url = models.URLField(null=True)
     license = models.CharField(max_length=50, null=True)
+    github_update_time = models.DateTimeField(null=True)
+    latest_commit_hash = models.CharField(max_length=40, null=True)
 
     def save(self, *args, **kwargs):
         if not self.url_name:
@@ -68,3 +70,33 @@ class Contribution(models.Model):
     contributor = models.ForeignKey(Contributor, on_delete=models.SET_NULL, null=True)
     component = models.ForeignKey(Component, on_delete=models.SET_NULL, null=True, related_name='contributions')
     contributions = models.IntegerField(default=0)
+
+class Visualization(models.Model):
+    name = models.CharField(max_length=50)
+    component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
+    url = models.URLField(null=True)
+
+    def __unicode__(self):
+        return self.name + '-' + str(self.component.name)
+
+class JSDependency(models.Model):
+    js_url = models.URLField(null=True)
+    component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
+
+    def __unicode__(self):
+        return str(self.component)
+
+class CSSDependency(models.Model):
+    css_url = models.URLField(null=True)
+    component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
+
+    def __unicode__(self):
+        return str(self.component)
+
+class SniperData(models.Model):
+    no_browserify = models.BooleanField(default=False)
+    wzrd_url = models.URLField(null=True)
+    component = models.OneToOneField(Component, on_delete=models.SET_NULL, null=True)
+
+    def __unicode__(self):
+        return str(self.component)
