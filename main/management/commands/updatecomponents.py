@@ -8,6 +8,109 @@ except:
     GITHUB_CLIENT_SECRET = ''
 from datetime import datetime
 import pytz
+import ast
+
+# Get sniper data
+'''
+https://rawgit.com/cytoscape/cytoscape.js/master/package.json
+"sniper" key, has "js" and "css". Search for "first"
+'''
+
+def get_commit_hash(commits_url):
+    commits_url = commits_url.split('{')[0] + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
+    print (commits_url)
+    response = urllib.urlopen(commits_url)
+    data = json.loads(response.read())[0]
+    return data['sha']
+
+### store the dependency urls and snippet urls
+def update_visualizations(component, commit_hash):
+    github_url_list = component.github_url.split('?')[0].split('/')
+    owner = github_url_list[4]
+    repo_name = github_url_list[5]
+    try:
+        sniper_data = json.load(urllib.urlopen("https://cdn.rawgit.com/" + str(owner) + 
+                                '/' + str(repo_name) + "/" + commit_hash + "/package.json"))["sniper"]
+    except:
+        return
+    try:
+        buildJS = sniper_data["buildJS"]
+    except:
+        buildJS = []
+    try:
+        js = sniper_data["js"]
+    except:
+        js = []
+    js_dependencies = buildJS + js
+    try:
+        buildCSS = sniper_data["buildCSS"]
+    except:
+        buildCSS = []
+    try:
+        css = sniper_data["css"]
+    except:
+        css = []
+    css_dependencies = buildCSS + css
+    for dependency in js_dependencies:
+        if dependency.startswith('https://'):
+            dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
+        elif dependency.startswith('/'):
+            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
+            dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
+        else:
+            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + dependency
+            dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
+    for dependency in css_dependencies:
+        if dependency.startswith('https://'):
+            dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
+        elif dependency.startswith('/'):
+            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
+            dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
+        else:
+            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + dependency
+            dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
+    try:
+        sniperData = SniperData.objects.get(component=component)
+    except:
+        sniperData = SniperData.objects.create(component=component)
+    try:
+        no_browserify = sniper_data['noBrowserify']
+        sniperData.no_browserify = no_browserify
+    except:
+        pass
+    try:
+        if no_browserify:
+            sniperData.wzrd_url = '#'
+        else:
+            sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name    
+    except:
+        sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name
+    try:
+        snippets_dir_name = sniper_data['snippets'][0]
+        sniperData.snippets_dir_name = snippets_dir_name
+    except:
+        pass
+    sniperData.save()
+
+    ### For Snippets URLs
+    try:
+        print ("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
+                                            + GITHUB_CLIENT_ID + "&client_secret=" + GITHUB_CLIENT_SECRET)
+        snippets_data = urllib.urlopen("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
+                                            + GITHUB_CLIENT_ID + "&client_secret=" + GITHUB_CLIENT_SECRET)
+        snippets = json.loads(snippets_data.read())
+        for snippet in snippets:
+            if not snippet['name'].endswith('.js'):
+                continue
+            url = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + sniperData.snippets_dir_name + "/" + snippet['name']
+            try:
+                req_snippet = Snippet.objects.get(name=snippet['name'], sniperData=sniperData)
+                req_snippet.url = url
+                req_snippet.save()
+            except:
+                Snippet.objects.create(name=snippet['name'], sniperData=sniperData, url=url)
+    except:
+        pass
 
 def get_github_data(github_url):
     response = urllib.urlopen(github_url)
@@ -18,6 +121,7 @@ def get_npm_data():
     # response = urllib2.urlopen()
     hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
     req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=keywords:biojs,bionode&size=500", headers=hdr)
+    # req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=biojs-vis-msa&size=1", headers=hdr)
     response = urllib2.urlopen(req)
     data = json.load(response)
     return data
@@ -28,8 +132,7 @@ def get_contributors_data(contributors_url):
     return data
 
 def get_downloads(downloads_url):
-    import ast
-    print downloads_url
+    print (downloads_url)
     response = urllib.urlopen(downloads_url)
     downloads = 0
     data = ast.literal_eval(response.read())
@@ -48,10 +151,10 @@ class Command(BaseCommand):
             component_data = component['package']
             try:
                 _component = Component.objects.get(name=component_data['name'])
-                print 'exists'
+                print ('exists')
             except:
                 _component = Component.objects.create(name=component_data['name'])
-            print _component.name
+            print (_component.name)
             try:
                 _component.version = component_data['version']
             except:
@@ -104,7 +207,7 @@ class Command(BaseCommand):
             _component.save()
 
             if _component.github_url:
-                print _component.github_url
+                print (_component.github_url)
                 try:
                     github_data = get_github_data(_component.github_url)
                 except:
@@ -126,8 +229,25 @@ class Command(BaseCommand):
                     _component.created_time = aware_date
                 except:
                     pass
+                # try:
+                str_date = github_data['updated_at']
+                req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%SZ") #This object is timezone unaware
+                aware_date = pytz.utc.localize(req_date)    #This object is now timezone aware
+                # if _component.github_update_time:
+                #     if aware_date > _component.github_update_time:
+                #         _component.github_updated_time = aware_date
+                #         latest_commit_hash = get_commit_hash(github_data['commits_url'])
+                #         _component.latest_commit_hash = latest_commit_hash
+                        # update_visualizations(_component, latest_commit_hash)
+                # else:
+                _component.github_update_time = aware_date
+                latest_commit_hash = get_commit_hash(github_data['commits_url'])
+                _component.latest_commit_hash = latest_commit_hash
+                update_visualizations(_component, latest_commit_hash)
+                # except:
+                #     pass
                 _component.save()
-                print str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
+                print (str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
                 try:
                     contributors_data = get_contributors_data(str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
                 except:

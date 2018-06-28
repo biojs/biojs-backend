@@ -37,9 +37,18 @@ def component_details(request, url_name):
     component = Component.objects.get(url_name=url_name)
     details = DetailComponentSerializer(component, context={'request':request})
     contributions = ContributionSerializer(component.contributions, many=True)
+    js_dependencies = JSDependencySerializer(component.jsdependency_set.all(), many=True)
+    css_dependencies = CSSDependencySerializer(component.cssdependency_set.all(), many=True)
+    sniper_data = component.sniperdata
+    sniper = SniperDataSerializer(sniper_data)
+    snippets = SnippetSerializer(sniper_data.snippet_set.all(), many=True)
     return JsonResponse({
         'details' : details.data,
         'contributors' : contributions.data,
+        'js_dependencies' : js_dependencies.data,
+        'css_dependencies' : css_dependencies.data,
+        'sniper_data' : sniper.data,
+        'snippets' : snippets.data,
     })
 
 @staff_member_required
