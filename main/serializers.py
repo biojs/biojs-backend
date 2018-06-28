@@ -104,3 +104,27 @@ class ContributionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contribution
         fields = ('contributor', 'contributions', 'id')
+
+class JSDependencySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = JSDependency
+        fields = ('js_url',)
+
+class CSSDependencySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CSSDependency
+        fields = ('css_url',)
+
+class SniperDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SniperData
+        fields = ('wzrd_url',)
+    
+class SnippetSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Snippet
+        fields = ('url', 'name')

@@ -97,6 +97,15 @@ class SniperData(models.Model):
     no_browserify = models.BooleanField(default=False)
     wzrd_url = models.URLField(null=True)
     component = models.OneToOneField(Component, on_delete=models.SET_NULL, null=True)
-
+    snippets_dir_name = models.CharField(max_length=50, default='snippets')
+    
     def __unicode__(self):
         return str(self.component)
+
+class Snippet(models.Model):
+    url = models.URLField()
+    name = models.CharField(max_length=50)
+    sniperData = models.ForeignKey(SniperData, null=True, on_delete=models.SET_NULL)
+
+    def __unicode__(self):
+        return str(self.sniperData.component)

@@ -17,19 +17,17 @@ https://rawgit.com/cytoscape/cytoscape.js/master/package.json
 '''
 
 def get_commit_hash(commits_url):
-    # import ast
-    
     commits_url = commits_url.split('{')[0] + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
-    print commits_url
+    print (commits_url)
     response = urllib.urlopen(commits_url)
     data = json.loads(response.read())[0]
     return data['sha']
 
+### store the dependency urls and snippet urls
 def update_visualizations(component, commit_hash):
     github_url_list = component.github_url.split('?')[0].split('/')
     owner = github_url_list[4]
     repo_name = github_url_list[5]
-    # print "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/package.json"
     try:
         sniper_data = json.load(urllib.urlopen("https://cdn.rawgit.com/" + str(owner) + 
                                 '/' + str(repo_name) + "/" + commit_hash + "/package.json"))["sniper"]
@@ -78,13 +76,41 @@ def update_visualizations(component, commit_hash):
     try:
         no_browserify = sniper_data['noBrowserify']
         sniperData.no_browserify = no_browserify
+    except:
+        pass
+    try:
         if no_browserify:
             sniperData.wzrd_url = '#'
         else:
-            sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name
+            sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name    
+    except:
+        sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name
+    try:
+        snippets_dir_name = sniper_data['snippets'][0]
+        sniperData.snippets_dir_name = snippets_dir_name
     except:
         pass
     sniperData.save()
+
+    ### For Snippets URLs
+    try:
+        print ("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
+                                            + GITHUB_CLIENT_ID + "&client_secret=" + GITHUB_CLIENT_SECRET)
+        snippets_data = urllib.urlopen("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
+                                            + GITHUB_CLIENT_ID + "&client_secret=" + GITHUB_CLIENT_SECRET)
+        snippets = json.loads(snippets_data.read())
+        for snippet in snippets:
+            if not snippet['name'].endswith('.js'):
+                continue
+            url = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + sniperData.snippets_dir_name + "/" + snippet['name']
+            try:
+                req_snippet = Snippet.objects.get(name=snippet['name'], sniperData=sniperData)
+                req_snippet.url = url
+                req_snippet.save()
+            except:
+                Snippet.objects.create(name=snippet['name'], sniperData=sniperData, url=url)
+    except:
+        pass
 
 def get_github_data(github_url):
     response = urllib.urlopen(github_url)
@@ -106,8 +132,7 @@ def get_contributors_data(contributors_url):
     return data
 
 def get_downloads(downloads_url):
-    # import ast
-    print downloads_url
+    print (downloads_url)
     response = urllib.urlopen(downloads_url)
     downloads = 0
     data = ast.literal_eval(response.read())
@@ -126,10 +151,10 @@ class Command(BaseCommand):
             component_data = component['package']
             try:
                 _component = Component.objects.get(name=component_data['name'])
-                print 'exists'
+                print ('exists')
             except:
                 _component = Component.objects.create(name=component_data['name'])
-            print _component.name
+            print (_component.name)
             try:
                 _component.version = component_data['version']
             except:
@@ -182,7 +207,7 @@ class Command(BaseCommand):
             _component.save()
 
             if _component.github_url:
-                print _component.github_url
+                print (_component.github_url)
                 try:
                     github_data = get_github_data(_component.github_url)
                 except:
@@ -222,7 +247,7 @@ class Command(BaseCommand):
                 # except:
                 #     pass
                 _component.save()
-                print str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
+                print (str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
                 try:
                     contributors_data = get_contributors_data(str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
                 except:
