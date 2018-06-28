@@ -24,7 +24,7 @@ def get_commit_hash(commits_url):
     return data['sha']
 
 ### store the dependency urls and snippet urls
-def update_visualizations(component, commit_hash):
+def update_visualizations(component, commit_hash, test=False):
     github_url_list = component.github_url.split('?')[0].split('/')
     owner = github_url_list[4]
     repo_name = github_url_list[5]
@@ -94,7 +94,8 @@ def update_visualizations(component, commit_hash):
 
     ### For Snippets URLs
     try:
-        print ("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
+        if not test:
+            print ("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
                                             + GITHUB_CLIENT_ID + "&client_secret=" + GITHUB_CLIENT_SECRET)
         snippets_data = urllib.urlopen("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
                                             + GITHUB_CLIENT_ID + "&client_secret=" + GITHUB_CLIENT_SECRET)
