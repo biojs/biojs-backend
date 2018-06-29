@@ -51,6 +51,21 @@ def component_details(request, url_name):
         'snippets' : snippets.data,
     })
 
+def render_visualization(request, url_name, visualization_name):
+    component = Component.objects.get(url_name=url_name)
+    js_dependencies = component.jsdependency_set.all()
+    css_dependencies = component.cssdependency_set.all()
+    sniper_data = component.sniperdata
+    snippet = Snippet.objects.get(sniperData=sniper_data, name=name)
+    context = {
+        'component' : component,
+        'js_dependencies' : js_dependencies,
+        'css_dependencies' : css_dependencies,
+        'snippet' : snippet,
+        'sniper_data' : sniper_data,
+    }
+    return render(request, 'main/visualizations.html', context)
+
 @staff_member_required
 def update_data(request):
     call_command('updatecomponents')

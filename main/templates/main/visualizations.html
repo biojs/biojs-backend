@@ -1,0 +1,14 @@
+{% comment %}
+
+Template for rendering visualizations.
+
+1. Obtain visualization for iframe with URL /visualization/<url_name>/<visualization_name>/
+2. For dependencies
+(% for dependency in js_dependencies %) // Similarly for css dependencies
+URL = dependency.js_url
+{% endfor %}
+3. Snippet raw git URL : snippet.url
+4. Snippet name : snippet.name
+5. wzrd_url : sniper_data.wzrd_url
+6. no_browserify : sniper_data.no_browserify
+{% endcomment }
