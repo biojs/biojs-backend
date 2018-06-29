@@ -80,6 +80,8 @@ class DetailComponentSerializer(serializers.ModelSerializer):
                 'version',
                 'author',
                 'license',
+                'github_update_time',
+                'latest_commit_hash',
             )
 
 class BaseComponentSerializer(serializers.ModelSerializer): #serializer fields used while querying

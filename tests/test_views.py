@@ -9,6 +9,7 @@ import pytz
 import urllib, urllib2
 import json
 import ast
+from main.management.commands import updatecomponents
 
 class IndexViewTest(TestCase):
 
@@ -147,6 +148,11 @@ class DetailComponentViewTest(TestCase):
 		req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=cytoscape&size=1", headers=hdr)
 		response = urllib2.urlopen(req)
 		data['objects'].append(json.load(response)['objects'][0])
+		### BENCHMARK COMPONENT
+		hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
+		req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=gmkhsuorlom4n85u&size=1", headers=hdr)
+		response = urllib2.urlopen(req)
+		data['objects'].append(json.load(response)['objects'][0])
 		for component in data['objects']:
 			component_data = component['package']
 			_component = Component.objects.create(name=component_data['name'])
@@ -220,7 +226,16 @@ class DetailComponentViewTest(TestCase):
 				    _component.created_time = aware_date
 				except:
 				    pass
+				str_date = github_data['updated_at']
+				req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%SZ")
+				aware_date = pytz.utc.localize(req_date)
+				_component.github_update_time = aware_date
+				commits_url = github_data['commits_url'].split('{')[0]
+				response = urllib.urlopen(commits_url)
+				data = json.loads(response.read())[0]
+				_component.latest_commit_hash = data['sha']
 				_component.save()
+				updatecomponents.update_visualizations(_component, _component.latest_commit_hash, True)
 				contributors_data = json.load(urllib.urlopen(str(github_data['contributors_url'])))
 				commits = 0
 				count = 0
@@ -252,11 +267,15 @@ class DetailComponentViewTest(TestCase):
 		self.assertEqual(response.status_code, 200)
 		response = self.client.get('/details/cytoscape/')
 		self.assertEqual(response.status_code, 200)
+		response = self.client.get('/details/mplexviz-ngraph/')
+		self.assertEqual(response.status_code, 200)
 
 	def test_view_accessible_by_name(self):
 		response = self.client.get(reverse('main:component_details', kwargs={'url_name':'biojs-vis-rohart-msc-test'}))
 		self.assertEqual(response.status_code, 200)
 		response = self.client.get(reverse('main:component_details', kwargs={'url_name':'cytoscape'}))
+		self.assertEqual(response.status_code, 200)
+		response = self.client.get(reverse('main:component_details', kwargs={'url_name':'mplexviz-ngraph'}))
 		self.assertEqual(response.status_code, 200)
 
 	# Tests whether the relevant keys are present in the json response and length of response list is same as number of components in database
@@ -270,6 +289,10 @@ class DetailComponentViewTest(TestCase):
 		response_2 = self.client.get(reverse('main:component_details', kwargs={'url_name':'cytoscape'}))
 		self.assertTrue('details' in response_2.json())
 		objects.append(response_2.json()['details'])
+		# call for mplexviz-ngraph
+		response_3 = self.client.get(reverse('main:component_details', kwargs={'url_name':'mplexviz-ngraph'}))
+		self.assertTrue('details' in response_3.json())
+		objects.append(response_3.json()['details'])
 		# Test if all the required fields are present in the response
 		for object in objects:
 			self.assertTrue(
@@ -290,7 +313,9 @@ class DetailComponentViewTest(TestCase):
 					'open_issues' in object and
 					'version' in object and
 					'author' in object and
-					'license' in object
+					'license' in object and
+					'github_update_time' in object and
+					'latest_commit_hash' in object
 				)
 		# check if number of commits >= 50 for biojs-vis-rohart-msc-test 
 		# and >= 3757 for cytoscape, from the time the tests were initiated
@@ -298,15 +323,22 @@ class DetailComponentViewTest(TestCase):
 		self.assertTrue(int(response_1.json()['details']['commits']) >= 50)
 		self.assertTrue(int(response_2.json()['details']['commits']) >= 3757)
 
+		# Tests for benchmark component
+		self.assertTrue(int(response_3.json()['details']['stars']) >= 3)
+		self.assertTrue(int(response_2.json()['details']['commits']) >= 70)
+
 		# modified date should be after created date
-		self.assertTrue(response_1.json()['details']['created_time'] <= response_1.json()['details']['modified_time']) # for biojs-vis-rohart-msc-test
-		self.assertTrue(response_2.json()['details']['created_time'] <= response_2.json()['details']['modified_time']) # for cytoscape
+		self.assertTrue(response_1.json()['details']['created_time'] <= response_1.json()['details']['github_update_time']) # for biojs-vis-rohart-msc-test
+		self.assertTrue(response_2.json()['details']['created_time'] <= response_2.json()['details']['github_update_time']) # for cytoscape
+		self.assertTrue(response_3.json()['details']['created_time'] <= response_3.json()['details']['github_update_time']) # for mplexviz-ngraph
 		# check if number of contributors is same as contributors added
 		self.assertEqual(response_1.json()['details']['no_of_contributors'], Contribution.objects.filter(component=Component.objects.get(name='biojs-vis-rohart-msc-test')).count())
 		self.assertEqual(response_1.json()['details']['no_of_contributors'], len(response_1.json()['contributors']))
 		self.assertEqual(response_2.json()['details']['no_of_contributors'], Contribution.objects.filter(component=Component.objects.get(name='cytoscape')).count())
 		self.assertEqual(response_2.json()['details']['no_of_contributors'], len(response_2.json()['contributors']))
-		for object in response_1.json()['contributors'] + response_2.json()['contributors']:
+		self.assertEqual(response_3.json()['details']['no_of_contributors'], Contribution.objects.filter(component=Component.objects.get(name='mplexviz-ngraph')).count())
+		self.assertEqual(response_3.json()['details']['no_of_contributors'], len(response_3.json()['contributors']))
+		for object in response_1.json()['contributors'] + response_2.json()['contributors'] + response_3.json()['contributors']:
 			self.assertTrue(
 					'contributor' in object and
 					'contributions' in object and
@@ -317,3 +349,55 @@ class DetailComponentViewTest(TestCase):
 					'username' in contributor_details and
 					'avatar_url' in contributor_details
 				)
+
+		# tests for visualizations
+		# Test for JS and CSS dependencies as well as snippets names.
+		# Cytoscape
+		if 'js_dependencies' in response_2.json():
+			for js_dependency in response_2.json()['js_dependencies']:
+				url = js_dependency['js_url']
+				latest_commit_hash = response_2.json()['details']['latest_commit_hash']
+				# Verify that cdn URL is configured correctly
+				if('cdn.rawgit.com' in url):
+					self.assertTrue(latest_commit_hash in url)
+		if 'css_dependencies' in response_2.json():
+			for css_dependency in response_2.json()['css_dependencies']:
+				url = css_dependency['css_url']
+				latest_commit_hash = response_2.json()['details']['latest_commit_hash']
+				# Verify that cdn URL is configured correctly
+				if('cdn.rawgit.com' in url):
+					self.assertTrue(latest_commit_hash in url)
+		if 'snippets' in response_2.json():
+			snippets_list = ['animated-bfs.js', 'images.js', 'performance-tuning.js', 'visual.js']
+			for snippet in response_2.json()['snippets']:
+				latest_commit_hash = response_2.json()['details']['latest_commit_hash']
+				url = snippet['url']
+				name = snippet['name']
+				if('cdn.rawgit.com' in url):
+					self.assertTrue(latest_commit_hash in url)
+				self.assertTrue(name in snippets_list)
+
+		# mplexviz-ngraph
+		if 'js_dependencies' in response_3.json():
+			for js_dependency in response_3.json()['js_dependencies']:
+				url = js_dependency['js_url']
+				latest_commit_hash = response_3.json()['details']['latest_commit_hash']
+				# Verify that cdn URL is configured correctly
+				if('cdn.rawgit.com' in url):
+					self.assertTrue(latest_commit_hash in url)
+		if 'css_dependencies' in response_3.json():
+			for css_dependency in response_3.json()['css_dependencies']:
+				url = css_dependency['css_url']
+				latest_commit_hash = response_3.json()['details']['latest_commit_hash']
+				# Verify that cdn URL is configured correctly
+				if('cdn.rawgit.com' in url):
+					self.assertTrue(latest_commit_hash in url)
+		if 'snippets' in response_3.json():
+			snippets_list = ['one.js', 'two.js', 'three.js']
+			for snippet in response_3.json()['snippets']:
+				latest_commit_hash = response_3.json()['details']['latest_commit_hash']
+				url = snippet['url']
+				name = snippet['name']
+				if('cdn.rawgit.com' in url):
+					self.assertTrue(latest_commit_hash in url)
+				self.assertTrue(name in snippets_list)
