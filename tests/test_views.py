@@ -368,7 +368,7 @@ class DetailComponentViewTest(TestCase):
 				if('cdn.rawgit.com' in url):
 					self.assertTrue(latest_commit_hash in url)
 		if 'snippets' in response_2.json():
-			snippets_list = ['animated-bfs.js', 'images.js', 'performance-tuning.js', 'visual.js']
+			snippets_list = ['animated-bfs', 'images', 'performance-tuning', 'visual']
 			for snippet in response_2.json()['snippets']:
 				latest_commit_hash = response_2.json()['details']['latest_commit_hash']
 				url = snippet['url']
@@ -393,7 +393,7 @@ class DetailComponentViewTest(TestCase):
 				if('cdn.rawgit.com' in url):
 					self.assertTrue(latest_commit_hash in url)
 		if 'snippets' in response_3.json():
-			snippets_list = ['one.js', 'two.js', 'three.js']
+			snippets_list = ['one', 'two', 'three']
 			for snippet in response_3.json()['snippets']:
 				latest_commit_hash = response_3.json()['details']['latest_commit_hash']
 				url = snippet['url']
