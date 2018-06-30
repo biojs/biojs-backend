@@ -105,11 +105,13 @@ def update_visualizations(component, commit_hash, test=False):
                 continue
             url = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + sniperData.snippets_dir_name + "/" + snippet['name']
             try:
-                req_snippet = Snippet.objects.get(name=snippet['name'], sniperData=sniperData)
+                name = snippet['name'].split('.')[0]
+                req_snippet = Snippet.objects.get(name=name, sniperData=sniperData)
                 req_snippet.url = url
                 req_snippet.save()
             except:
-                Snippet.objects.create(name=snippet['name'], sniperData=sniperData, url=url)
+                name = snippet['name'].split('.')[0]
+                Snippet.objects.create(name=name, sniperData=sniperData, url=url)
     except:
         pass
 
