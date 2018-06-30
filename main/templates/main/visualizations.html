@@ -7,8 +7,15 @@ Template for rendering visualizations.
 (% for dependency in js_dependencies %) // Similarly for css dependencies
 URL = dependency.js_url
 {% endfor %}
-3. Snippet raw git URL : snippet.url
-4. Snippet name : snippet.name
-5. wzrd_url : sniper_data.wzrd_url
-6. no_browserify : sniper_data.no_browserify
-{% endcomment }
+3. Snippet raw git URL : {{snippet.url}}
+4. Snippet name : {{snippet.name}}
+5. wzrd_url : {{sniper_data.wzrd_url}}
+6. no_browserify : {{sniper_data.no_browserify}}
+{% endcomment %}
+
+<html>
+<body>
+    Hello World!
+    You requested {{snippet.name}} snippet of {{component.name}}. Wzrd URL is {{sniper_data.wzrd_url}}.
+</body>
+</html>
