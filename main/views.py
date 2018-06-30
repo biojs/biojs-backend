@@ -67,7 +67,7 @@ def render_visualization(request, url_name, visualization_name):
     snippet = Snippet.objects.get(sniperData=sniper_data, name=visualization_name)
     data = urllib.urlopen(snippet.url).read()
     context = {
-        'component' : component,
+        'component' : DetailComponentSerializer(component).data,
         'js_dependencies' : js_dependencies,
         'css_dependencies' : css_dependencies,
         'snippet' : snippet,

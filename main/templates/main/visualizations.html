@@ -1,4 +1,6 @@
 {% comment %}
+!!ADD VERSION TO WZRD!! 
+
 
 Template for rendering visualizations.
 
@@ -13,171 +15,79 @@ URL = dependency.js_url
 6. no_browserify : {{sniper_data.no_browserify}}
 {% endcomment %}
 
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
         {% for dependency in css_dependencies %}
             <link rel="stylesheet" type="text/css" href="{{dependency.css_url}}" />
         {% endfor %}
         {% for dependency in js_dependencies %}
             <script src="{{dependency.js_url}}"></script>
         {% endfor %}
-        <script src={{sniper_data.wzrd_url}}@{{component.version}}></script>
+        <script src="{{sniper_data.wzrd_url}}"></script>
     </head>
     <body>
+        <div id="placeholderDiv" style="display: none">
+            {{snippet_script}}
+        </div>
+        </div>
         <div id='snippetDiv'></div>
     </body>
     <script>
-        var yourDiv = document.getElementById('snippetDiv');
-        yourDiv.style.left = 0;
-yourDiv.style.top = 0;
-yourDiv.style.width = "100%";
-yourDiv.style.height = "100%";
-yourDiv.style.position = "absolute";
+        // 
+        String.prototype.replaceAll = function(search, replacement) {
+            var target = this;
+            return target.replace(new RegExp(search, 'g'), replacement);
+        };
 
-var cytoscape = require("cytoscape");
+        // find main element variable
+        findMainVar = function(content) {
+            var tags = ["yourDiv", "mainDiv", "rootDiv", "masterDiv", "biojsDiv"];
+            var defaultDiv = tags[0];
+            tags.forEach(function(tag) {
+                if (content.indexOf(tag) >= 0) {
+                defaultDiv = tag;
+                }
+            });
+            return defaultDiv;
+        }; 
 
-var cy = cytoscape({
-  container: yourDiv,
+        // translate relative paths
+        translateRelative = function(body, baseLocal, path) {
+            if (body.indexOf("./") >= 0) {
+                var htmlUrl = baseLocal + "/" + path + "/";
+                body = body.replace(/\.\.\//g, baseLocal + "/");
+                body = body.replace(/\.\//g, htmlUrl);
+            }
+            return body;
+        };
+        
 
-  style: cytoscape.stylesheet()
-    .selector('node')
-      .style({
-        'height': 80,
-        'width': 80,
-        'background-fit': 'cover',
-        'border-color': '#000',
-        'border-width': 3,
-        'border-opacity': 0.5
-      })
-    .selector('.eating')
-      .style({
-        'border-color': 'red'
-      })
-    .selector('.eater')
-      .style({
-        'border-width': 9
-      })
-    .selector('edge')
-      .style({
-        'width': 6,
-        'target-arrow-shape': 'triangle',
-        'line-color': '#ffaaaa',
-        'target-arrow-color': '#ffaaaa'
-      })
-    .selector('#bird')
-      .style({
-        'background-image': 'https://farm8.staticflickr.com/7272/7633179468_3e19e45a0c_b.jpg'
-      })
-    .selector('#cat')
-      .style({
-        'background-image': 'https://farm2.staticflickr.com/1261/1413379559_412a540d29_b.jpg'
-      })
-    .selector('#ladybug')
-      .style({
-        'background-image': 'https://farm4.staticflickr.com/3063/2751740612_af11fb090b_b.jpg'
-      })
-  .selector('#aphid')
-      .style({
-        'background-image': 'https://farm9.staticflickr.com/8316/8003798443_32d01257c8_b.jpg'
-      })
-  .selector('#rose')
-      .style({
-        'background-image': 'https://farm6.staticflickr.com/5109/5817854163_eaccd688f5_b.jpg'
-      })
-  .selector('#grasshopper')
-      .style({
-        'background-image': 'https://farm7.staticflickr.com/6098/6224655456_f4c3c98589_b.jpg'
-      })
-  .selector('#plant')
-      .style({
-        'background-image': 'https://farm1.staticflickr.com/231/524893064_f49a4d1d10_z.jpg'
-      })
-  .selector('#wheat')
-      .style({
-        'background-image': 'https://farm3.staticflickr.com/2660/3715569167_7e978e8319_b.jpg'
-      }),
+        var script = document.getElementById("placeholderDiv").innerHTML;
+        script = script.replaceAll("&lt;", "<");
+        script = script.replaceAll("&gt;", ">");
 
-  elements: {
-    nodes: [
-      { data: { id: 'cat' } },
-      { data: { id: 'bird' } },
-      { data: { id: 'ladybug' } },
-      { data: { id: 'aphid' } },
-      { data: { id: 'rose' } },
-      { data: { id: 'grasshopper' } },
-      { data: { id: 'plant' } },
-      { data: { id: 'wheat' } }
-    ],
-    edges: [
-      { data: { source: 'cat', target: 'bird' } },
-      { data: { source: 'bird', target: 'ladybug' } },
-      { data: { source: 'bird', target: 'grasshopper' } },
-      { data: { source: 'grasshopper', target: 'plant' } },
-      { data: { source: 'grasshopper', target: 'wheat' } },
-      { data: { source: 'ladybug', target: 'aphid' } },
-      { data: { source: 'aphid', target: 'rose' } }
-    ]
-  },
+        var githubURL = "{{component.github_url}}";
+        var lastCommitHash = "{{component.latest_commit_hash}}";
+        
+        var div = findMainVar(script);
+        var mainDiv = "var "+div+" = document.getElementById('snippetDiv');"
 
-  layout: {
-    name: 'breadthfirst',
-    directed: true,
-    padding: 10
-  }
-}); // cy init
+        // get rawgit base URL
+        var rawgitURL = githubURL.replace("github.com", "cdn.rawgit.com");
+        if(rawgitURL.substr(rawgitURL.length - 1) === '/') {
+            rawgitURL = rawgitURL + '' + lastCommitHash;
+        } else {
+            rawgitURL = rawgitURL + '/' + lastCommitHash;
+        }
 
-cy.on('tap', 'node', function(){
-  var nodes = this;
-  var tapped = nodes;
-  var food = [];
+        // change relative paths in script
+        script = translateRelative(script, rawgitURL, "snippets");
 
-  nodes.addClass('eater');
-
-  for(;;){
-    var connectedEdges = nodes.connectedEdges(function( edge ){
-      return !edge.target().anySame( nodes );
-    });
-
-    var connectedNodes = connectedEdges.targets();
-
-    Array.prototype.push.apply( food, connectedNodes );
-
-    nodes = connectedNodes;
-
-    if( nodes.empty() ){ break; }
-  }
-
-  var delay = 0;
-  var duration = 500;
-  for( var i = food.length - 1; i >= 0; i-- ){ (function(){
-    var thisFood = food[i];
-    var eater = thisFood.connectedEdges(function( edge ){
-      return edge.target().same(thisFood);
-    }).source();
-
-    thisFood.delay( delay, function(){
-      eater.addClass('eating');
-    } ).animate({
-      position: eater.position(),
-      css: {
-        'width': 10,
-        'height': 10,
-        'border-width': 0,
-        'opacity': 0
-      }
-    }, {
-      duration: duration,
-      complete: function(){
-        thisFood.remove();
-      }
-    });
-
-    delay += duration;
-  })(); } // for
-
-}); // on tap
+        // complete script and evaluate the script
+        script = mainDiv + script;
+        eval(script);
+    
     </script>
-    <!-- <script src="https://ajax.cloudflare.com/cdn-cgi/scripts/4f936b58/cloudflare-static/rocket-loader.min.js" data-cf-nonce="" defer=""></script> -->
-
-    <!-- <script src={{snippet.url}} ></script> -->
 </html>
