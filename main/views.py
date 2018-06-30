@@ -65,11 +65,13 @@ def render_visualization(request, url_name, visualization_name):
     css_dependencies = component.cssdependency_set.all()
     sniper_data = component.sniperdata
     snippet = Snippet.objects.get(sniperData=sniper_data, name=visualization_name)
+    data = urllib.urlopen(snippet.url).read()
     context = {
         'component' : component,
         'js_dependencies' : js_dependencies,
         'css_dependencies' : css_dependencies,
         'snippet' : snippet,
+        'snippet_script' : data,
         'sniper_data' : sniper_data,
     }
     return render(request, 'main/visualizations.html', context)
