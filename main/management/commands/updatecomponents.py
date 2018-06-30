@@ -242,7 +242,10 @@ class Command(BaseCommand):
                         # update_visualizations(_component, latest_commit_hash)
                 # else:
                 _component.github_update_time = aware_date
-                latest_commit_hash = get_commit_hash(github_data['commits_url'])
+                try:
+                    latest_commit_hash = get_commit_hash(github_data['commits_url'])
+                except:
+                    continue
                 _component.latest_commit_hash = latest_commit_hash
                 update_visualizations(_component, latest_commit_hash)
                 # except:
@@ -255,19 +258,23 @@ class Command(BaseCommand):
                     continue
                 commits = 0
                 count = 0
-                for contributor in contributors_data:
-                    try:
-                        _contributor = Contributor.objects.get(username=contributor["login"])
-                    except:
-                        _contributor = Contributor.objects.create(username=contributor["login"], avatar_url=contributor["avatar_url"])
-                    try:
-                        _contribution = Contribution.objects.get(component=_component, contributor=_contributor)
-                        _contribution.contributions = contributor["contributions"]
-                        _contribution.save()
-                    except:
-                        _contribution = Contribution.objects.create(component=_component, contributor=_contributor, contributions=contributor["contributions"])
-                    commits += _contribution.contributions
-                    count +=1
+                try:
+                    for contributor in contributors_data:
+                        try:
+                            _contributor = Contributor.objects.get(username=contributor["login"])
+                        except:
+                            _contributor = Contributor.objects.create(username=contributor["login"], avatar_url=contributor["avatar_url"])
+                        try:
+                            _contribution = Contribution.objects.get(component=_component, contributor=_contributor)
+                            _contribution.contributions = contributor["contributions"]
+                            _contribution.save()
+                        except:
+                            _contribution = Contribution.objects.create(component=_component, contributor=_contributor, contributions=contributor["contributions"])
+                        commits += _contribution.contributions
+                        count +=1
+                except:
+                    print 'Error'
+                    continue
                 try:
                     _component.downloads = get_downloads(str(github_data['downloads_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
                 except:

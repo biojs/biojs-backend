@@ -39,17 +39,25 @@ def component_details(request, url_name):
     contributions = ContributionSerializer(component.contributions, many=True)
     js_dependencies = JSDependencySerializer(component.jsdependency_set.all(), many=True)
     css_dependencies = CSSDependencySerializer(component.cssdependency_set.all(), many=True)
-    sniper_data = component.sniperdata
-    sniper = SniperDataSerializer(sniper_data)
-    snippets = SnippetSerializer(sniper_data.snippet_set.all(), many=True)
-    return JsonResponse({
-        'details' : details.data,
-        'contributors' : contributions.data,
-        'js_dependencies' : js_dependencies.data,
-        'css_dependencies' : css_dependencies.data,
-        'sniper_data' : sniper.data,
-        'snippets' : snippets.data,
-    })
+    try:
+        sniper_data = component.sniperdata
+        sniper = SniperDataSerializer(sniper_data)
+        snippets = SnippetSerializer(sniper_data.snippet_set.all(), many=True)
+        return JsonResponse({
+            'details' : details.data,
+            'contributors' : contributions.data,
+            'js_dependencies' : js_dependencies.data,
+            'css_dependencies' : css_dependencies.data,
+            'sniper_data' : sniper.data,
+            'snippets' : snippets.data,
+        })
+    except:
+        return JsonResponse({
+            'details' : details.data,
+            'contributors' : contributions.data,
+            'js_dependencies' : js_dependencies.data,
+            'css_dependencies' : css_dependencies.data,
+        })
 
 def render_visualization(request, url_name, visualization_name):
     component = Component.objects.get(url_name=url_name)
