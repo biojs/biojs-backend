@@ -55,20 +55,44 @@ def update_visualizations(component, commit_hash, test=False):
         if dependency.startswith('https://'):
             dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
         elif dependency.startswith('/'):
+            dependency_string = dependency
             dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
-            dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
+            try:
+                req_dependency = JSDependency.objects.get(component=component, sniper_data_value=dependency_string)
+                req_dependency.js_url = dependency
+                req_dependency.save()
+            except:
+                req_dependency = JSDependency.objects.create(component=component, sniper_data_value=dependency_string, js_url=dependency)
         else:
+            dependency_string = dependency
             dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + dependency
-            dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
+            try:
+                req_dependency = JSDependency.objects.get(component=component, sniper_data_value=dependency_string)
+                req_dependency.js_url = dependency
+                req_dependency.save()
+            except:
+                req_dependency = JSDependency.objects.create(component=component, sniper_data_value=dependency_string, js_url=dependency)
     for dependency in css_dependencies:
         if dependency.startswith('https://'):
             dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
         elif dependency.startswith('/'):
+            dependency_string = dependency
             dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
-            dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
+            try:
+                req_dependency = CSSDependency.objects.get(component=component, sniper_data_value=dependency_string)
+                req_dependency.css_url = dependency
+                req_dependency.save()
+            except:
+                req_dependency = CSSDependency.objects.create(component=component, sniper_data_value=dependency_string, css_url=dependency)
         else:
-            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + dependency
-            dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
+            dependency_string = dependency
+            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
+            try:
+                req_dependency = CSSDependency.objects.get(component=component, sniper_data_value=dependency_string)
+                req_dependency.css_url = dependency
+                req_dependency.save()
+            except:
+                req_dependency = CSSDependency.objects.create(component=component, sniper_data_value=dependency_string, css_url=dependency)
     try:
         sniperData = SniperData.objects.get(component=component)
     except:
