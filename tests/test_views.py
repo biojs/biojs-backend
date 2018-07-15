@@ -10,7 +10,11 @@ import urllib, urllib2
 import json
 import ast
 from main.management.commands import updatecomponents
-from biojs.config import *
+try:
+	from biojs.config import *
+except:
+	GITHUB_CLIENT_ID = ''
+	GITHUB_CLIENT_SECRET = ''
 
 class IndexViewTest(TestCase):
 
