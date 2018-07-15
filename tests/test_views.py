@@ -10,6 +10,7 @@ import urllib, urllib2
 import json
 import ast
 from main.management.commands import updatecomponents
+from biojs.config import *
 
 class IndexViewTest(TestCase):
 
@@ -192,9 +193,9 @@ class DetailComponentViewTest(TestCase):
 			except:
 			    pass
 			try:
-			    github_url = component_data['links']['repository']
-			    url_list = github_url.split('/')
-			    _component.github_url = 'https://api.github.com/repos/' + str(url_list[3]) + '/' + str(url_list[4])
+				github_url = component_data['links']['repository']
+				url_list = github_url.split('/')
+				_component.github_url = 'https://api.github.com/repos/' + str(url_list[3]) + '/' + str(url_list[4]) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
 			except:
 			    pass
 			try:
@@ -208,6 +209,7 @@ class DetailComponentViewTest(TestCase):
 			_component.save()
 
 			if _component.github_url:
+				# print _component.github_url
 				response = urllib.urlopen(_component.github_url)
 				github_data = json.load(response)
 				_component.stars = github_data['stargazers_count']
@@ -230,13 +232,13 @@ class DetailComponentViewTest(TestCase):
 				req_date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%SZ")
 				aware_date = pytz.utc.localize(req_date)
 				_component.github_update_time = aware_date
-				commits_url = github_data['commits_url'].split('{')[0]
+				commits_url = github_data['commits_url'].split('{')[0] + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
 				response = urllib.urlopen(commits_url)
 				data = json.loads(response.read())[0]
 				_component.latest_commit_hash = data['sha']
 				_component.save()
 				updatecomponents.update_visualizations(_component, _component.latest_commit_hash, True)
-				contributors_data = json.load(urllib.urlopen(str(github_data['contributors_url'])))
+				contributors_data = json.load(urllib.urlopen(str(github_data['contributors_url'] + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)))
 				commits = 0
 				count = 0
 				for contributor in contributors_data:
@@ -252,7 +254,7 @@ class DetailComponentViewTest(TestCase):
 					    _contribution = Contribution.objects.create(component=_component, contributor=_contributor, contributions=contributor["contributions"])
 					commits += _contribution.contributions
 					count +=1
-				response = urllib.urlopen(github_data['downloads_url'])
+				response = urllib.urlopen(github_data['downloads_url'] + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
 				downloads = 0
 				data = ast.literal_eval(response.read())
 				for download in data:
