@@ -56,6 +56,8 @@ def update_visualizations(component, commit_hash, test=False):
             dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
         elif dependency.startswith('/'):
             dependency_string = dependency
+            if 'build/' in dependency_string:
+                continue
             dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
             try:
                 req_dependency = JSDependency.objects.get(component=component, sniper_data_value=dependency_string)
@@ -65,6 +67,8 @@ def update_visualizations(component, commit_hash, test=False):
                 req_dependency = JSDependency.objects.create(component=component, sniper_data_value=dependency_string, js_url=dependency)
         else:
             dependency_string = dependency
+            if 'build/' in dependency_string:
+                continue
             dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + dependency
             try:
                 req_dependency = JSDependency.objects.get(component=component, sniper_data_value=dependency_string)
@@ -77,6 +81,8 @@ def update_visualizations(component, commit_hash, test=False):
             dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
         elif dependency.startswith('/'):
             dependency_string = dependency
+            if 'build/' in dependency_string:
+                continue
             dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
             try:
                 req_dependency = CSSDependency.objects.get(component=component, sniper_data_value=dependency_string)
@@ -86,6 +92,8 @@ def update_visualizations(component, commit_hash, test=False):
                 req_dependency = CSSDependency.objects.create(component=component, sniper_data_value=dependency_string, css_url=dependency)
         else:
             dependency_string = dependency
+            if 'build/' in dependency_string:
+                continue
             dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
             try:
                 req_dependency = CSSDependency.objects.get(component=component, sniper_data_value=dependency_string)
