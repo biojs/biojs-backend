@@ -25,7 +25,7 @@ URL = dependency.js_url
         {% for dependency in js_dependencies %}
             <script type="application/x-javascript" src="{{dependency.js_url}}"></script>
         {% endfor %}
-        <script type="application/x-javascript" src="{{sniper_data.wzrd_url}}@{{sniper_data.version}}"></script>
+        <script type="application/x-javascript" src="{{sniper_data.wzrd_url}}@{{component.version}}"></script>
     </head>
     <body>
         <div id="placeholderDiv" style="display: none">
