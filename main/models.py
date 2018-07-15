@@ -82,6 +82,7 @@ class Visualization(models.Model):
 class JSDependency(models.Model):
     js_url = models.URLField(null=True)
     component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
+    sniper_data_value = models.CharField(max_length=50, null=True)
 
     def __unicode__(self):
         return str(self.component)
@@ -89,6 +90,7 @@ class JSDependency(models.Model):
 class CSSDependency(models.Model):
     css_url = models.URLField(null=True)
     component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
+    sniper_data_value = models.CharField(max_length=50, null=True)
 
     def __unicode__(self):
         return str(self.component)
