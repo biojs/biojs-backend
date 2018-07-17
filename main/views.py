@@ -85,7 +85,7 @@ def update_data(request):
 def generate_random_snippets(request):
     try:
         count = request.GET.get('q')
-        if count > Component.objects.filter(sniperdata__isnull=False).count():
+        if int(count) > Component.objects.filter(sniperdata__isnull=False).count():
             return HttpResponse('Input number "q" must not exceed %s.'%str(Component.objects.filter(sniperdata__isnull=False).count()))
         components = Component.objects.filter(sniperdata__isnull=False)
         required_components = np.random.choice(components, int(count), replace=False)
