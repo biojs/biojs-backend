@@ -1,7 +1,4 @@
 {% comment %}
-!!ADD VERSION TO WZRD!! 
-
-
 Template for rendering visualizations.
 
 1. Obtain visualization for iframe with URL /visualization/<url_name>/<visualization_name>/
@@ -23,9 +20,9 @@ URL = dependency.js_url
             <link rel="stylesheet" type="text/css" href="{{dependency.css_url}}" />
         {% endfor %}
         {% for dependency in js_dependencies %}
-            <script src="{{dependency.js_url}}"></script>
+            <script type="application/x-javascript" src="{{dependency.js_url}}"></script>
         {% endfor %}
-        <script src="{{sniper_data.wzrd_url}}"></script>
+        <script type="application/x-javascript" src="{{sniper_data.wzrd_url}}@{{component.version}}"></script>
     </head>
     <body>
         <div id="placeholderDiv" style="display: none">
@@ -34,8 +31,7 @@ URL = dependency.js_url
         </div>
         <div id='snippetDiv'></div>
     </body>
-    <script>
-        // 
+    <script type="text/javascript">
         String.prototype.replaceAll = function(search, replacement) {
             var target = this;
             return target.replace(new RegExp(search, 'g'), replacement);
