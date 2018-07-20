@@ -6,6 +6,7 @@ from django.http import HttpResponse
 import urllib, json
 from django.core.management import call_command
 from django.core.serializers.json import DjangoJSONEncoder
+import numpy as np
 
 def index(request):
     top_downloaded_components = Component.objects.all().only('name', 'id', 'downloads', 'url_name').order_by('-downloads')[:3]
@@ -80,3 +81,16 @@ def render_visualization(request, url_name, visualization_name):
 def update_data(request):
     call_command('updatecomponents')
     return HttpResponse("Database Successfully Updated.")
+
+def generate_random_snippets(request):
+    try:
+        count = request.GET.get('q')
+        if int(count) > Component.objects.filter(sniperdata__isnull=False).count():
+            return HttpResponse('Input number "q" must not exceed %s.'%str(Component.objects.filter(sniperdata__isnull=False).count()))
+        components = Component.objects.filter(sniperdata__isnull=False)
+        required_components = np.random.choice(components, int(count), replace=False)
+        req_str = '\n'.join([component.name for component in required_components])
+        print req_str
+        return HttpResponse(req_str, content_type="text/plain")
+    except:
+        return HttpResponse('Input number as query "q" in the URL.')

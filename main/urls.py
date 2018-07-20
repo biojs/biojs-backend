@@ -10,4 +10,5 @@ urlpatterns = [
         url(r'^top/$', views.top_components, name="top_components"),
         url(r'^details/(?P<url_name>[\w-]+)/$', views.component_details, name="component_details"),
 		url(r'^visualization/(?P<url_name>[\w-]+)/(?P<visualization_name>[\w-]+)/$', views.render_visualization, name="render_visualization"),
+		url(r'^random_snippets/$', views.generate_random_snippets, name='generate_random_snippets'),
 ]
