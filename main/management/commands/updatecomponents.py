@@ -52,7 +52,7 @@ def update_visualizations(component, commit_hash, test=False):
         css = []
     css_dependencies = buildCSS + css
     for dependency in js_dependencies:
-        if dependency.startswith('https://'):
+        if dependency.startswith('http') :
             dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
         elif dependency.startswith('/'):
             dependency_string = dependency
