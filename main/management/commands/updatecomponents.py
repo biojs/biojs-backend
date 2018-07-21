@@ -77,7 +77,7 @@ def update_visualizations(component, commit_hash, test=False):
             except:
                 req_dependency = JSDependency.objects.create(component=component, sniper_data_value=dependency_string, js_url=dependency)
     for dependency in css_dependencies:
-        if dependency.startswith('https://'):
+        if dependency.startswith('http'):
             dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
         elif dependency.startswith('/'):
             dependency_string = dependency

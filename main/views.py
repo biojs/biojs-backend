@@ -86,11 +86,9 @@ def generate_random_snippets(request):
     try:
         count = request.GET.get('q')
         if int(count) > Component.objects.filter(sniperdata__isnull=False).count():
-            return HttpResponse('Input number "q" must not exceed %s.'%str(Component.objects.filter(sniperdata__isnull=False).count()))
+            return JsonResponse({'error':'Input number q must not exceed %s.'%str(Component.objects.filter(sniperdata__isnull=False).count())})
         components = Component.objects.filter(sniperdata__isnull=False)
         required_components = np.random.choice(components, int(count), replace=False)
-        req_str = '\n'.join([component.name for component in required_components])
-        print req_str
-        return HttpResponse(req_str, content_type="text/plain")
+        return JsonResponse({'components':BaseComponentSerializer(required_components, many=True).data})
     except:
-        return HttpResponse('Input number as query "q" in the URL.')
+        return JsonResponse({'error':'Input number as query q in the URL.'})
