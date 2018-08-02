@@ -33,14 +33,14 @@ class Component(models.Model):
     forks = models.IntegerField(default=0, null=True)
     watchers = models.IntegerField(default=0, null=True)
     no_of_contributors = models.IntegerField(default=0, null=True)
-    version = models.CharField(max_length=50, null=True)
+    version = models.CharField(max_length=100, null=True)
     no_of_releases = models.IntegerField(default=0)
     open_issues = models.IntegerField(default=0)
     author = models.CharField(max_length=200, null=True)
     author_email = models.EmailField(null=True)
     npm_url = models.URLField(null=True)
     homepage_url = models.URLField(null=True)
-    license = models.CharField(max_length=50, null=True)
+    license = models.CharField(max_length=100, null=True)
     github_update_time = models.DateTimeField(null=True)
     latest_commit_hash = models.CharField(max_length=40, null=True)
 
@@ -53,7 +53,7 @@ class Component(models.Model):
         return self.name
 
 class Tag(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
 
     def __unicode__(self):
         return self.name
@@ -72,7 +72,7 @@ class Contribution(models.Model):
     contributions = models.IntegerField(default=0)
 
 class Visualization(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
     url = models.URLField(null=True)
 
@@ -82,7 +82,7 @@ class Visualization(models.Model):
 class JSDependency(models.Model):
     js_url = models.URLField(null=True)
     component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
-    sniper_data_value = models.CharField(max_length=50, null=True)
+    sniper_data_value = models.CharField(max_length=500, null=True)
 
     def __unicode__(self):
         return str(self.component)
@@ -90,7 +90,7 @@ class JSDependency(models.Model):
 class CSSDependency(models.Model):
     css_url = models.URLField(null=True)
     component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
-    sniper_data_value = models.CharField(max_length=50, null=True)
+    sniper_data_value = models.CharField(max_length=500, null=True)
 
     def __unicode__(self):
         return str(self.component)
@@ -99,14 +99,14 @@ class SniperData(models.Model):
     no_browserify = models.BooleanField(default=False)
     wzrd_url = models.URLField(null=True)
     component = models.OneToOneField(Component, on_delete=models.SET_NULL, null=True)
-    snippets_dir_name = models.CharField(max_length=50, default='snippets')
+    snippets_dir_name = models.CharField(max_length=100, default='snippets')
     
     def __unicode__(self):
         return str(self.component)
 
 class Snippet(models.Model):
     url = models.URLField()
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     sniperData = models.ForeignKey(SniperData, null=True, on_delete=models.SET_NULL)
 
     def __unicode__(self):
