@@ -1,0 +1,15 @@
+version: '2'
+services:
+  biojs-backend:
+    command: /bin/sh -c "pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --verbosity 3"
+    image: biojs-backend-base
+    working_dir: /opt
+    volumes:
+      - .:/opt
+    ports:
+      - 8000:8000
+    networks:
+      - service
+
+networks:
+  service:
