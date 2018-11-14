@@ -160,6 +160,6 @@ MEDIA_URL = '/backend_media/'
 CORS_ORIGIN_WHITELIST = (
     'biojs.net',
     'biojs.io',
-    'localhost',
+    'localhost:8080',
     '127.0.0.1:9000'
 )
