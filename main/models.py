@@ -23,7 +23,7 @@ class Component(models.Model):
     downloads = models.BigIntegerField(default=0, null=True)
     created_time = models.DateTimeField(null=True)
     modified_time = models.DateTimeField(null=True)
-    tags = models.ManyToManyField('Tag', null=True)
+    tags = models.ManyToManyField('Tag')
     icon_url = models.URLField(null=True, blank=True)
     icon = models.ImageField(null=True, upload_to='icons/')
     github_url = models.URLField(null=True)
