@@ -73,6 +73,8 @@ def update_visualizations(component, commit_hash, test=False):
     sniperData, created = SniperData.objects.get_or_create(component=component)
     if 'noBrowserify' in sniper_data:
         sniperData.no_browserify = sniper_data['noBrowserify']
+    elif len(js) == 0 and len(css) == 0:
+        sniperData.no_browserify = True
 
     sniperData.wzrd_url = '#' if sniperData.no_browserify else 'https://wzrd.in/bundle/' + component.name
     if 'snippets' in sniper_data:
@@ -88,7 +90,7 @@ def update_visualizations(component, commit_hash, test=False):
         snippets = json.load(snippets_data)
         filtered_snippets = filter(lambda s: s['name'].endswith('.js'), snippets)
     except Exception as e:
-        print('ERROR: Something went wrong getting snipper data!')
+        print('ERROR: Something went wrong getting snippets data!')
         print(e)
 
 
