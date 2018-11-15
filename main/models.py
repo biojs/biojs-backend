@@ -100,7 +100,7 @@ class SniperData(models.Model):
     wzrd_url = models.URLField(null=True)
     component = models.OneToOneField(Component, on_delete=models.SET_NULL, null=True)
     snippets_dir_name = models.CharField(max_length=100, default='snippets')
-    
+
     def __unicode__(self):
         return str(self.component)
 
