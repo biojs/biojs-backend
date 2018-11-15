@@ -1,14 +1,16 @@
 from django.core.management import BaseCommand
-import urllib2, json, urllib
+import urllib2, json, urllib, base64
 from main.models import *
 try:
-    from biojs.config import *
+    from biojs.settings import GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
 except:
+    print('ERROR: Could not load config!')
     GITHUB_CLIENT_ID = ''
     GITHUB_CLIENT_SECRET = ''
 from datetime import datetime
 import pytz
 import ast
+import re
 
 # Get sniper data
 '''
@@ -16,12 +18,32 @@ https://rawgit.com/cytoscape/cytoscape.js/master/package.json
 "sniper" key, has "js" and "css". Search for "first"
 '''
 
-def get_commit_hash(commits_url):
-    commits_url = commits_url.split('{')[0] + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
-    print (commits_url)
-    response = urllib.urlopen(commits_url)
-    data = json.loads(response.read())[0]
-    return data['sha']
+def get_npm_data():
+    # response = urllib2.urlopen()
+    hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
+    req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=keywords:biojs,bionode&size=500", headers=hdr)
+    # req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=biojs-vis-msa&size=1", headers=hdr)
+    response = urllib2.urlopen(req)
+    data = json.load(response)
+    return data
+
+def send_GET_request(user, password, url):
+    request = urllib2.Request(url)
+    if (user is not None and password is not None):
+        base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
+        request.add_header('Authorization', 'Basic %s' % base64string)
+    return urllib2.urlopen(request)
+
+def create_jsdelivr_link(owner, repo, file_path, commit=None):
+    return str('https://cdn.jsdelivr.net/gh/' + owner + '/' + repo + ('@' + commit if commit else '') + file_path)
+
+def build_dependency_link(owner, repo, dependency, commit=None):
+    if (re.match('^(?:[a-z]+:)?//', dependency)):
+        print('Absolute dependency!', dependency)
+        return dependency
+    else:
+        print('relative dependency!', dependency)
+        return create_jsdelivr_link(owner, repo, dependency, commit)
 
 ### store the dependency urls and snippet urls
 def update_visualizations(component, commit_hash, test=False):
@@ -29,10 +51,15 @@ def update_visualizations(component, commit_hash, test=False):
     owner = github_url_list[4]
     repo_name = github_url_list[5]
     try:
-        sniper_data = json.load(urllib.urlopen("https://cdn.rawgit.com/" + str(owner) + 
-                                '/' + str(repo_name) + "/" + commit_hash + "/package.json"))["sniper"]
-    except:
+        url = create_jsdelivr_link(owner, repo_name, '/package.json', commit_hash)
+        # url = str('https://cdn.jsdelivr.net/gh/' + str(owner) + '/' + str(repo_name) + '@' + commit_hash + '/package.json')
+        response = send_GET_request(None, None, url)
+        package = json.load(response)
+        sniper_data = package["sniper"]
+    except KeyError:
+        print('No sniper info in ', repo_name)
         return
+    # buildJS and js are thrown together and then separated by string matching?
     try:
         buildJS = sniper_data["buildJS"]
     except:
@@ -51,56 +78,8 @@ def update_visualizations(component, commit_hash, test=False):
     except:
         css = []
     css_dependencies = buildCSS + css
-    for dependency in js_dependencies:
-        if dependency.startswith('http') :
-            dependency, created = JSDependency.objects.get_or_create(component=component, js_url=dependency)
-        elif dependency.startswith('/'):
-            dependency_string = dependency
-            if 'build/' in dependency_string:
-                continue
-            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
-            try:
-                req_dependency = JSDependency.objects.get(component=component, sniper_data_value=dependency_string)
-                req_dependency.js_url = dependency
-                req_dependency.save()
-            except:
-                req_dependency = JSDependency.objects.create(component=component, sniper_data_value=dependency_string, js_url=dependency)
-        else:
-            dependency_string = dependency
-            if 'build/' in dependency_string:
-                continue
-            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + dependency
-            try:
-                req_dependency = JSDependency.objects.get(component=component, sniper_data_value=dependency_string)
-                req_dependency.js_url = dependency
-                req_dependency.save()
-            except:
-                req_dependency = JSDependency.objects.create(component=component, sniper_data_value=dependency_string, js_url=dependency)
-    for dependency in css_dependencies:
-        if dependency.startswith('http'):
-            dependency, created = CSSDependency.objects.get_or_create(component=component, css_url=dependency)
-        elif dependency.startswith('/'):
-            dependency_string = dependency
-            if 'build/' in dependency_string:
-                continue
-            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
-            try:
-                req_dependency = CSSDependency.objects.get(component=component, sniper_data_value=dependency_string)
-                req_dependency.css_url = dependency
-                req_dependency.save()
-            except:
-                req_dependency = CSSDependency.objects.create(component=component, sniper_data_value=dependency_string, css_url=dependency)
-        else:
-            dependency_string = dependency
-            if 'build/' in dependency_string:
-                continue
-            dependency = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + dependency
-            try:
-                req_dependency = CSSDependency.objects.get(component=component, sniper_data_value=dependency_string)
-                req_dependency.css_url = dependency
-                req_dependency.save()
-            except:
-                req_dependency = CSSDependency.objects.create(component=component, sniper_data_value=dependency_string, css_url=dependency)
+    js_deps = map(lambda l: build_dependency_link(owner, repo_name, l, commit_hash), js_dependencies)
+    css_deps = map(lambda l: build_dependency_link(owner, repo_name, l, commit_hash), css_dependencies)
     try:
         sniperData = SniperData.objects.get(component=component)
     except:
@@ -114,7 +93,7 @@ def update_visualizations(component, commit_hash, test=False):
         if no_browserify:
             sniperData.wzrd_url = '#'
         else:
-            sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name    
+            sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name
     except:
         sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name
     try:
@@ -146,35 +125,6 @@ def update_visualizations(component, commit_hash, test=False):
                 Snippet.objects.create(name=name, sniperData=sniperData, url=url)
     except:
         pass
-
-def get_github_data(github_url):
-    response = urllib.urlopen(github_url)
-    data = json.load(response)
-    return data
-
-def get_npm_data():
-    # response = urllib2.urlopen()
-    hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
-    req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=keywords:biojs,bionode&size=500", headers=hdr)
-    # req = urllib2.Request("http://registry.npmjs.com/-/v1/search?text=biojs-vis-msa&size=1", headers=hdr)
-    response = urllib2.urlopen(req)
-    data = json.load(response)
-    return data
-
-def get_contributors_data(contributors_url):
-    response = urllib.urlopen(contributors_url)
-    data = json.load(response)
-    return data
-
-def get_downloads(downloads_url):
-    print (downloads_url)
-    response = urllib.urlopen(downloads_url)
-    downloads = 0
-    data = ast.literal_eval(response.read())
-    for download in data:
-        downloads += int(download['download_count'])
-    return downloads
-
 
 class Command(BaseCommand):
     # during --help
@@ -228,7 +178,7 @@ class Command(BaseCommand):
             try:
                 github_url = component_data['links']['repository']
                 url_list = github_url.split('/')
-                _component.github_url = 'https://api.github.com/repos/' + str(url_list[3]) + '/' + str(url_list[4]) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET
+                _component.github_url = 'https://api.github.com/repos/' + str(url_list[3]) + '/' + str(url_list[4])
             except:
                 pass
             try:
@@ -244,8 +194,15 @@ class Command(BaseCommand):
             if _component.github_url:
                 print (_component.github_url)
                 try:
-                    github_data = get_github_data(_component.github_url)
-                except:
+                    response = send_GET_request(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, _component.github_url)
+                    github_data = json.load(response)
+                except urllib2.HTTPError as e:
+                    print('Error getting github data!')
+                    print(e)
+                    continue
+                except Exception as e:
+                    print('Unexpected error accessing Github!')
+                    print(e)
                     continue
                 _component.stars = github_data['stargazers_count']
                 _component.forks = github_data['forks']
@@ -277,17 +234,21 @@ class Command(BaseCommand):
                 # else:
                 _component.github_update_time = aware_date
                 try:
-                    latest_commit_hash = get_commit_hash(github_data['commits_url'])
+                    response = send_GET_request(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, github_data['commits_url'].split('{')[0])
+                    latest_commit = json.load(response)[0]
+                    latest_commit_hash = latest_commit['sha']
+                    _component.latest_commit_hash = latest_commit_hash
+                    update_visualizations(_component, latest_commit_hash)
                 except:
-                    continue
-                _component.latest_commit_hash = latest_commit_hash
-                update_visualizations(_component, latest_commit_hash)
+                    print('Error getting commit hash!')
+                    pass
                 # except:
                 #     pass
                 _component.save()
-                print (str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
+                print (str(github_data['contributors_url']))
                 try:
-                    contributors_data = get_contributors_data(str(github_data['contributors_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
+                    response = send_GET_request(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, str(github_data['contributors_url']))
+                    contributors_data = json.load(response)
                 except:
                     continue
                 commits = 0
@@ -307,12 +268,11 @@ class Command(BaseCommand):
                         commits += _contribution.contributions
                         count +=1
                 except:
-                    print 'Error'
+                    print ('Error')
                     continue
-                try:
-                    _component.downloads = get_downloads(str(github_data['downloads_url']) + '?client_id=' + GITHUB_CLIENT_ID + '&client_secret=' + GITHUB_CLIENT_SECRET)
-                except:
-                    pass
+                response = send_GET_request(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, github_data['downloads_url'])
+                downloads_array = json.load(response)
+                _component.downloads = len(downloads_array)
                 _component.commits = commits
                 _component.no_of_contributors = count
                 _component.save()

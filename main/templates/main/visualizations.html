@@ -32,9 +32,8 @@ URL = dependency.js_url
         <div id='snippetDiv'></div>
     </body>
     <script type="text/javascript">
-        String.prototype.replaceAll = function(search, replacement) {
-            var target = this;
-            return target.replace(new RegExp(search, 'g'), replacement);
+        const replaceAll = function(str, search, replacement) {
+            return str.replace(new RegExp(search, 'g'), replacement);
         };
 
         // find main element variable
@@ -47,7 +46,7 @@ URL = dependency.js_url
                 }
             });
             return defaultDiv;
-        }; 
+        };
 
         // translate relative paths
         translateRelative = function(body, baseLocal, path) {
@@ -58,15 +57,15 @@ URL = dependency.js_url
             }
             return body;
         };
-        
+
 
         var script = document.getElementById("placeholderDiv").innerHTML;
-        script = script.replaceAll("&lt;", "<");
-        script = script.replaceAll("&gt;", ">");
+        script = replaceAll(script, "&lt;", "<");
+        script = replaceAll(script, "&gt;", ">");
 
         var githubURL = "{{component.github_url}}";
         var lastCommitHash = "{{component.latest_commit_hash}}";
-        
+
         var div = findMainVar(script);
         var mainDiv = "var "+div+" = document.getElementById('snippetDiv');"
 
@@ -84,6 +83,6 @@ URL = dependency.js_url
         // complete script and evaluate the script
         script = mainDiv + script;
         eval(script);
-    
+
     </script>
 </html>
