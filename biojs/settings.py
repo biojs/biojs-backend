@@ -22,6 +22,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '$&&+$xz)50khd6q+aq&95r1$2urmmdv37=-*lu3v-wwh46829t'
 
+GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID') or ''
+GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET') or ''
+
 # SECURITY WARNING: don't run with debug turned on in production!
 try:
     from config import *
