@@ -41,7 +41,7 @@ class TagModelTest(TestCase):
 	def test_name_max_length(self):
 		tag = Tag.objects.get(id=1)
 		max_length = tag._meta.get_field('name').max_length
-		self.assertEquals(max_length, 50)
+		self.assertEquals(max_length, 100)
 
 class ContributorModelTest(TestCase):
 
