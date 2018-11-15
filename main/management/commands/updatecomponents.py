@@ -27,7 +27,7 @@ def get_npm_data():
     data = json.load(response)
     return data
 
-def send_GET_request(user, password, url):
+def send_GET_request(url, user=None, password=None):
     request = urllib2.Request(url)
     if (user is not None and password is not None):
         base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
@@ -37,94 +37,70 @@ def send_GET_request(user, password, url):
 def create_jsdelivr_link(owner, repo, file_path, commit=None):
     return str('https://cdn.jsdelivr.net/gh/' + owner + '/' + repo + ('@' + commit if commit else '') + file_path)
 
-def build_dependency_link(owner, repo, dependency, commit=None):
-    if (re.match('^(?:[a-z]+:)?//', dependency)):
-        print('Absolute dependency!', dependency)
-        return dependency
-    else:
-        print('relative dependency!', dependency)
-        return create_jsdelivr_link(owner, repo, dependency, commit)
+def is_absolute_dependency(dep):
+    return re.match('^(?:[a-z]+:)?//', dep) is not None
+
+def get_owner_and_repo_from_github_url(url):
+    split_url = url.split('?')[0].split('/')
+    return split_url[4], split_url[5]
 
 ### store the dependency urls and snippet urls
 def update_visualizations(component, commit_hash, test=False):
-    github_url_list = component.github_url.split('?')[0].split('/')
-    owner = github_url_list[4]
-    repo_name = github_url_list[5]
+    owner, repo_name = get_owner_and_repo_from_github_url(component.github_url)
     try:
         url = create_jsdelivr_link(owner, repo_name, '/package.json', commit_hash)
-        # url = str('https://cdn.jsdelivr.net/gh/' + str(owner) + '/' + str(repo_name) + '@' + commit_hash + '/package.json')
-        response = send_GET_request(None, None, url)
+        response = send_GET_request(url)
         package = json.load(response)
         sniper_data = package["sniper"]
     except KeyError:
         print('No sniper info in ', repo_name)
         return
-    # buildJS and js are thrown together and then separated by string matching?
-    try:
-        buildJS = sniper_data["buildJS"]
-    except:
-        buildJS = []
-    try:
-        js = sniper_data["js"]
-    except:
-        js = []
-    js_dependencies = buildJS + js
-    try:
-        buildCSS = sniper_data["buildCSS"]
-    except:
-        buildCSS = []
-    try:
-        css = sniper_data["css"]
-    except:
-        css = []
-    css_dependencies = buildCSS + css
-    js_deps = map(lambda l: build_dependency_link(owner, repo_name, l, commit_hash), js_dependencies)
-    css_deps = map(lambda l: build_dependency_link(owner, repo_name, l, commit_hash), css_dependencies)
-    try:
-        sniperData = SniperData.objects.get(component=component)
-    except:
-        sniperData = SniperData.objects.create(component=component)
-    try:
-        no_browserify = sniper_data['noBrowserify']
-        sniperData.no_browserify = no_browserify
-    except:
-        pass
-    try:
-        if no_browserify:
-            sniperData.wzrd_url = '#'
-        else:
-            sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name
-    except:
-        sniperData.wzrd_url = "https://wzrd.in/bundle/" + component.name
-    try:
-        snippets_dir_name = sniper_data['snippets'][0]
-        sniperData.snippets_dir_name = snippets_dir_name
-    except:
-        pass
+    buildJS = sniper_data.get('buildJS', [])
+    js = sniper_data.get('js', [])
+    buildCSS = sniper_data.get('buildCSS', [])
+    css = sniper_data.get('css', [])
+    # Move absolute links from js to buildJS and same for css
+    buildJS = buildJS + filter(lambda l: is_absolute_dependency(l), js)
+    js = filter(lambda l: not is_absolute_dependency(l), js)
+    buildCSS = buildCSS + filter(lambda l: is_absolute_dependency(l), css)
+    css = filter(lambda l: not is_absolute_dependency(l), css)
+    # Save to db
+    for dep in buildJS:
+        JSDependency.objects.create(component=component, js_url=dep, sniper_data_value=dep)
+    for dep in buildCSS:
+        CSSDependency.objects.create(component=component, css_url=dep, sniper_data_value=dep)
+
+    sniperData, created = SniperData.objects.get_or_create(component=component)
+    if 'noBrowserify' in sniper_data:
+        sniperData.no_browserify = sniper_data['noBrowserify']
+
+    sniperData.wzrd_url = '#' if sniperData.no_browserify else 'https://wzrd.in/bundle/' + component.name
+    if 'snippets' in sniper_data:
+        sniperData.snippets_dir_name = sniper_data['snippets'][0]
     sniperData.save()
 
     ### For Snippets URLs
     try:
+        url = str('https://api.github.com/repos/' + owner + '/' + repo_name + '/contents/' + sniperData.snippets_dir_name + '?ref=master')
         if not test:
-            print ("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
-                                            + GITHUB_CLIENT_ID + "&client_secret=" + GITHUB_CLIENT_SECRET)
-        snippets_data = urllib.urlopen("https://api.github.com/repos/" + str(owner) + "/" + str(repo_name) + "/contents/" + sniperData.snippets_dir_name + "?ref=master&client_id="
-                                            + GITHUB_CLIENT_ID + "&client_secret=" + GITHUB_CLIENT_SECRET)
-        snippets = json.loads(snippets_data.read())
-        for snippet in snippets:
-            if not snippet['name'].endswith('.js'):
-                continue
-            url = "https://cdn.rawgit.com/" + str(owner) + '/' + str(repo_name) + "/" + commit_hash + "/" + sniperData.snippets_dir_name + "/" + snippet['name']
-            try:
-                name = snippet['name'].split('.')[0]
-                req_snippet = Snippet.objects.get(name=name, sniperData=sniperData)
-                req_snippet.url = url
-                req_snippet.save()
-            except:
-                name = snippet['name'].split('.')[0]
-                Snippet.objects.create(name=name, sniperData=sniperData, url=url)
-    except:
-        pass
+            print(url)
+        snippets_data = send_GET_request(url, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
+        snippets = json.load(snippets_data)
+        filtered_snippets = filter(lambda s: s['name'].endswith('.js'), snippets)
+    except Exception as e:
+        print('ERROR: Something went wrong getting snipper data!')
+        print(e)
+
+
+    for snip in filtered_snippets:
+        try:
+            url = create_jsdelivr_link(owner, repo_name, str('/' + sniperData.snippets_dir_name + '/' + snip['name']), commit_hash)
+            name = snip.get('name', '').split('.')[0]
+            Snippet.objects.create(name=name, url=url, sniperData=sniperData)
+            print('here!')
+        except Exception as e:
+            print('ERROR: Something went wrong creating a new Snippet')
+            print(e)
 
 class Command(BaseCommand):
     # during --help
@@ -194,7 +170,7 @@ class Command(BaseCommand):
             if _component.github_url:
                 print (_component.github_url)
                 try:
-                    response = send_GET_request(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, _component.github_url)
+                    response = send_GET_request(_component.github_url, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
                     github_data = json.load(response)
                 except urllib2.HTTPError as e:
                     print('Error getting github data!')
@@ -234,20 +210,24 @@ class Command(BaseCommand):
                 # else:
                 _component.github_update_time = aware_date
                 try:
-                    response = send_GET_request(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, github_data['commits_url'].split('{')[0])
+                    response = send_GET_request(github_data['commits_url'].split('{')[0], GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
                     latest_commit = json.load(response)[0]
                     latest_commit_hash = latest_commit['sha']
                     _component.latest_commit_hash = latest_commit_hash
-                    update_visualizations(_component, latest_commit_hash)
                 except:
                     print('Error getting commit hash!')
                     pass
+                try:
+                    update_visualizations(_component, latest_commit_hash)
+                except Exception as e:
+                    print('Error updating visualisations!')
+                    print(e)
                 # except:
                 #     pass
                 _component.save()
                 print (str(github_data['contributors_url']))
                 try:
-                    response = send_GET_request(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, str(github_data['contributors_url']))
+                    response = send_GET_request(str(github_data['contributors_url']), GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
                     contributors_data = json.load(response)
                 except:
                     continue
@@ -270,7 +250,7 @@ class Command(BaseCommand):
                 except:
                     print ('Error')
                     continue
-                response = send_GET_request(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, github_data['downloads_url'])
+                response = send_GET_request(github_data['downloads_url'], GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
                 downloads_array = json.load(response)
                 _component.downloads = len(downloads_array)
                 _component.commits = commits
