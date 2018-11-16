@@ -98,8 +98,7 @@ def update_visualizations(component, commit_hash, test=False):
         try:
             url = create_jsdelivr_link(owner, repo_name, str('/' + sniperData.snippets_dir_name + '/' + snip['name']), commit_hash)
             name = snip.get('name', '').split('.')[0]
-            Snippet.objects.create(name=name, url=url, sniperData=sniperData)
-            print('here!')
+            Snippet.objects.update_or_create(name=name, url=url, sniperData=sniperData)
         except Exception as e:
             print('ERROR: Something went wrong creating a new Snippet')
             print(e)
