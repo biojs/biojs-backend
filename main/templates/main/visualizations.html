@@ -2,87 +2,176 @@
 Template for rendering visualizations.
 
 1. Obtain visualization for iframe with URL /visualization/<url_name>/<visualization_name>/
-2. For dependencies
-(% for dependency in js_dependencies %) // Similarly for css dependencies
-URL = dependency.js_url
-{% endfor %}
-3. Snippet raw git URL : {{snippet.url}}
-4. Snippet name : {{snippet.name}}
-5. wzrd_url : {{sniper_data.wzrd_url}}
-6. no_browserify : {{sniper_data.no_browserify}}
-{% endcomment %}
-
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        {% for dependency in css_dependencies %}
-            <link rel="stylesheet" type="text/css" href="{{dependency.css_url}}" />
+        2. For dependencies
+        (% for dependency in js_dependencies %) // Similarly for css dependencies
+        URL = dependency.js_url
         {% endfor %}
-        {% for dependency in js_dependencies %}
-            <script type="application/x-javascript" src="{{dependency.js_url}}"></script>
-        {% endfor %}
-        <script type="application/x-javascript" src="{{sniper_data.wzrd_url}}@{{component.version}}"></script>
-    </head>
-    <body>
-        <div id="placeholderDiv" style="display: none">
-            {{snippet_script}}
-        </div>
-        </div>
-        <div id='snippetDiv'></div>
-    </body>
-    <script type="text/javascript">
-        const replaceAll = function(str, search, replacement) {
-            return str.replace(new RegExp(search, 'g'), replacement);
-        };
+        3. Snippet raw git URL : {{snippet.url}}
+        4. Snippet name : {{snippet.name}}
+        5. wzrd_url : {{sniper_data.wzrd_url}}
+        6. no_browserify : {{sniper_data.no_browserify}}
+        {% endcomment %}
 
-        // find main element variable
-        findMainVar = function(content) {
-            var tags = ["yourDiv", "mainDiv", "rootDiv", "masterDiv", "biojsDiv"];
-            var defaultDiv = tags[0];
-            tags.forEach(function(tag) {
-                if (content.indexOf(tag) >= 0) {
-                defaultDiv = tag;
+        <!DOCTYPE html>
+        <html>
+
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    min-height: 60px;
                 }
-            });
-            return defaultDiv;
-        };
 
-        // translate relative paths
-        translateRelative = function(body, baseLocal, path) {
-            if (body.indexOf("./") >= 0) {
-                var htmlUrl = baseLocal + "/" + path + "/";
-                body = body.replace(/\.\.\//g, baseLocal + "/");
-                body = body.replace(/\.\//g, htmlUrl);
+                .message {
+                    height: 60px;
+                    color: black;
+                    display: none;
+                }
+
+                #loading-bar-spinner.spinner {
+                    left: 50%;
+                    margin-left: -20px;
+                    top: 50%;
+                    margin-top: -20px;
+                    position: absolute;
+                    z-index: 19 !important;
+                    animation: loading-bar-spinner 400ms linear infinite;
+                }
+
+                #loading-bar-spinner.spinner .spinner-icon {
+                    width: 60px;
+                    height: 60px;
+                    border:  solid 4px transparent;
+                    border-top-color:  rgb(0, 126, 58) !important;
+                    border-left-color: rgb(0, 126, 58) !important;
+                    border-radius: 50%;
+                }
+
+                @keyframes loading-bar-spinner {
+                  0%   { transform: rotate(0deg);   transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); transform: rotate(360deg); }
+                }
+
+        </style>
+        </head>
+        <body>
+            <div id="loading-bar-spinner" class="spinner">
+                <div class="spinner-icon"></div>
+            </div>
+            <p class="message">
+                This visualisation can currently not be displayed due to its reliance on local dependencies!<br>
+                Please contact the developer to update it's package.json or refer to the update guide here:
+                >insert_link<
+            </p>
+            <div id='snippetDiv'></div>
+        </body>
+        <script type="text/javascript">
+            function stopLoading() {
+                const spinner = document.getElementById('loading-bar-spinner');
+                spinner.style.display = 'none';
             }
-            return body;
-        };
+            const componentJSON = '{{component|escapejs}}';
+            const component = JSON.parse(componentJSON);
+            const noBrowserify = '{{no_browserify|escapejs}}';
+            if (noBrowserify === 'False') {
+                stopLoading();
+                const message = document.getElementsByClassName('message')[0];
+                message.style.display = 'block';
+            }
+
+            const jsDepsStr = '{{ js_dependencies | escapejs }}';
+            const cssDepsStr = '{{ css_dependencies | escapejs }}';
+            const jsDeps = JSON.parse(jsDepsStr);
+            const cssDeps = JSON.parse(cssDepsStr);
+            const script = '{{ snippet_script | escapejs }}'
+
+            Promise.all(cssDeps.map(css => {
+                    return new Promise((res, rej) => {
+                        const style = document.createElement('link');
+                        style.rel = 'stylesheet';
+                        style.type = 'text/css';
+                        style.href = css.fields.css_url;
+                        style.onload = res;
+                        document.head.appendChild(style);
+                    });
+                })).then(() => {
+                    console.log('done loading css!');
+                    return Promise.all(jsDeps.map(js => {
+                        return new Promise((res, rej) => {
+                            const script = document.createElement("script");
+                            script.setAttribute('src', js.fields.js_url);
+                            script.onload = res;
+                            document.head.appendChild(script);
+                        });
+                    })).then(() => {
+                        console.log('done loading js!');
+                    })
+                })
+                .then(() => {
+                    stopLoading();
+                    var rootDiv = document.getElementById('snippetDiv');
+                    eval(script);
+                });
+
+            // const plugin = document.createElement("script");
+            // plugin.setAttribute(
+            //     'src',
+            //     'https://github.com/DennisSchwartz/mplexviz-ngraph/releases/download/v1.0.2/bundle.js'
+            // );
+            // plugin.onload = this.createVisualisation;
+            // // plugin.async = false;
+            // document.head.appendChild(plugin);
+            // const replaceAll = function (str, search, replacement) {
+            //     return str.replace(new RegExp(search, 'g'), replacement);
+            // };
+
+            // // find main element variable
+            // findMainVar = function (content) {
+            //     var tags = ["yourDiv", "mainDiv", "rootDiv", "masterDiv", "biojsDiv"];
+            //     var defaultDiv = tags[0];
+            //     tags.forEach(function (tag) {
+            //         if (content.indexOf(tag) >= 0) {
+            //             defaultDiv = tag;
+            //         }
+            //     });
+            //     return defaultDiv;
+            // };
+
+            // // translate relative paths
+            // translateRelative = function (body, baseLocal, path) {
+            //     if (body.indexOf("./") >= 0) {
+            //         var htmlUrl = baseLocal + "/" + path + "/";
+            //         body = body.replace(/\.\.\//g, baseLocal + "/");
+            //         body = body.replace(/\.\//g, htmlUrl);
+            //     }
+            //     return body;
+            // };
 
 
-        var script = document.getElementById("placeholderDiv").innerHTML;
-        script = replaceAll(script, "&lt;", "<");
-        script = replaceAll(script, "&gt;", ">");
+            // var script = document.getElementById("placeholderDiv").innerHTML;
+            // script = replaceAll(script, "&lt;", "<");
+            // script = replaceAll(script, "&gt;", ">");
 
-        var githubURL = "{{component.github_url}}";
-        var lastCommitHash = "{{component.latest_commit_hash}}";
+            // var githubURL = "{{component.github_url}}";
+            // var lastCommitHash = "{{component.latest_commit_hash}}";
 
-        var div = findMainVar(script);
-        var mainDiv = "var "+div+" = document.getElementById('snippetDiv');"
+            // var div = findMainVar(script);
+            // var mainDiv = "var " + div + " = document.getElementById('snippetDiv');"
 
-        // get rawgit base URL
-        var rawgitURL = githubURL.replace("github.com", "cdn.rawgit.com");
-        if(rawgitURL.substr(rawgitURL.length - 1) === '/') {
-            rawgitURL = rawgitURL + '' + lastCommitHash;
-        } else {
-            rawgitURL = rawgitURL + '/' + lastCommitHash;
-        }
+            // // get rawgit base URL
+            // var rawgitURL = githubURL.replace("github.com", "cdn.rawgit.com");
+            // if (rawgitURL.substr(rawgitURL.length - 1) === '/') {
+            //     rawgitURL = rawgitURL + '' + lastCommitHash;
+            // } else {
+            //     rawgitURL = rawgitURL + '/' + lastCommitHash;
+            // }
 
-        // change relative paths in script
-        script = translateRelative(script, rawgitURL, "snippets");
+            // // change relative paths in script
+            // script = translateRelative(script, rawgitURL, "snippets");
 
-        // complete script and evaluate the script
-        script = mainDiv + script;
-        eval(script);
+            // // complete script and evaluate the script
+            // script = mainDiv + script;
+            // eval(script);
+        </script>
 
-    </script>
-</html>
+        </html>
