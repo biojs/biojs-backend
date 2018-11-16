@@ -123,8 +123,8 @@ class SniperDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SniperData
-        fields = ('wzrd_url',)
-    
+        fields = ('wzrd_url', 'no_browserify',)
+
 class SnippetSerializer(serializers.ModelSerializer):
 
     class Meta:
