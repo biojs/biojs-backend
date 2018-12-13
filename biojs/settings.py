@@ -22,6 +22,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '$&&+$xz)50khd6q+aq&95r1$2urmmdv37=-*lu3v-wwh46829t'
 
+GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID') or ''
+GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET') or ''
+
 # SECURITY WARNING: don't run with debug turned on in production!
 try:
     from config import *
@@ -41,11 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'main',
     'rest_framework',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -152,3 +157,12 @@ STATIC_URL = '/backend_static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/backend_media/'
+
+# CORS settings
+
+CORS_ORIGIN_WHITELIST = (
+    'biojs.net',
+    'biojs.io',
+    'localhost:8080',
+    '127.0.0.1:9000'
+)

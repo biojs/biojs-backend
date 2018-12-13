@@ -1,11 +1,14 @@
 from django.shortcuts import render
 from .serializers import *
-from django.http import JsonResponse
+from rest_framework.renderers import JSONRenderer
+from management.commands.updatecomponents import send_GET_request
+from django.http import JsonResponse, HttpResponseServerError
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 import urllib, json
 from django.core.management import call_command
-from django.core.serializers.json import DjangoJSONEncoder
+from django.core.serializers import serialize
+from django.views.decorators.clickjacking import xframe_options_exempt
 import numpy as np
 
 def index(request):
@@ -60,22 +63,34 @@ def component_details(request, url_name):
             'css_dependencies' : css_dependencies.data,
         })
 
+@xframe_options_exempt
 def render_visualization(request, url_name, visualization_name):
-    component = Component.objects.get(url_name=url_name)
-    js_dependencies = component.jsdependency_set.all()
-    css_dependencies = component.cssdependency_set.all()
-    sniper_data = component.sniperdata
-    snippet = Snippet.objects.get(sniperData=sniper_data, name=visualization_name)
-    data = urllib.urlopen(snippet.url).read()
-    context = {
-        'component' : DetailComponentSerializer(component).data,
-        'js_dependencies' : js_dependencies,
-        'css_dependencies' : css_dependencies,
-        'snippet' : snippet,
-        'snippet_script' : data,
-        'sniper_data' : sniper_data,
-    }
-    return render(request, 'main/visualizations.html', context)
+    try:
+        component = Component.objects.get(url_name=url_name)
+        js_dependencies = component.jsdependency_set.all()
+        css_dependencies = component.cssdependency_set.all()
+        sniper_data = component.sniperdata
+        snippet = Snippet.objects.get(sniperData=sniper_data, name=visualization_name)
+        response = send_GET_request(snippet.url)
+        script = response.read()
+        serializer = DetailComponentSerializer(component).data
+        component_data = JSONRenderer().render(serializer)
+        js_deps_json = serialize('json', js_dependencies)
+        css_deps_json = serialize('json', css_dependencies)
+        context = {
+            'component' : component_data,
+            'js_dependencies' : js_deps_json,
+            'css_dependencies' : css_deps_json,
+            'snippet' : snippet,
+            'snippet_script' : script,
+            'sniper_data' : sniper_data,
+            'no_browserify': sniper_data.no_browserify
+        }
+        # return HttpResponse()
+        return render(request, 'main/visualizations.html', context)
+    except Exception as e:
+        print('Error in visualisation!', e)
+        return HttpResponseServerError(e)
 
 @staff_member_required
 def update_data(request):

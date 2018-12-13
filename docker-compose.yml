@@ -1,0 +1,17 @@
+version: '2'
+services:
+  biojs-backend:
+    command: /bin/sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --verbosity 3"
+    image: biojs-backend-base
+    working_dir: /opt
+    environment:
+      GITHUB_CLIENT_SECRET: 289807644cc6b4afe50b4bb2c5afcd7056047de0
+      GITHUB_CLIENT_ID: DennisSchwartz
+    volumes:
+      - .:/opt
+    ports:
+      - 8000:8000
+    networks:
+      - service
+networks:
+  service:
