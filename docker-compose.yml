@@ -1,17 +1,26 @@
 version: '2'
 services:
   biojs-backend:
-    command: /bin/sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --verbosity 3"
+    command: /bin/sh -c "python manage.py migrate && python manage.py runserver --verbosity 3 0.0.0.0:8000"
     image: biojs-backend-base
     working_dir: /opt
     environment:
-      GITHUB_CLIENT_SECRET: 289807644cc6b4afe50b4bb2c5afcd7056047de0
+      GITHUB_CLIENT_SECRET: 6d34bdfdea9b4cff95b4e8bf477842b68ec804cd
       GITHUB_CLIENT_ID: DennisSchwartz
     volumes:
       - .:/opt
     ports:
       - 8000:8000
     networks:
-      - service
+      - infra_rabbit
+
+  rabbit:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - infra_rabbit
+
 networks:
-  service:
+  infra_rabbit:

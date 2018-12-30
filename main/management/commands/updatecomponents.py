@@ -11,6 +11,7 @@ from datetime import datetime
 import pytz
 import ast
 import re
+from biojs.amqp import AMQPPublisher
 
 # Get sniper data
 '''
@@ -109,6 +110,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         all_components = get_npm_data()['objects']
+
+        publisher = AMQPPublisher()
+        publisher.publish({ 'key': 'value' })
+        return
+
         for component in all_components:
             component_data = component['package']
             try:

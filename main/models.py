@@ -4,7 +4,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.files import File
 import requests, os, urllib
-from urlparse import urlparse 
+from urlparse import urlparse
 import urllib2
 from django.core.files.base import ContentFile
 

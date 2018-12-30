@@ -166,3 +166,11 @@ CORS_ORIGIN_WHITELIST = (
     'localhost:8080',
     '127.0.0.1:9000'
 )
+
+AMQP_SETTINGS = {
+    'url': 'amqp://guest:guest@rabbit:5672',
+    'exchange': 'builder',
+    'exchange_type': 'topic',
+    'queue': 'build-component',
+    'routing_key': 'biojs.build-component',
+}
