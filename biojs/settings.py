@@ -25,12 +25,14 @@ SECRET_KEY = '$&&+$xz)50khd6q+aq&95r1$2urmmdv37=-*lu3v-wwh46829t'
 GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID') or ''
 GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET') or ''
 
+DEBUG = True
+
 # SECURITY WARNING: don't run with debug turned on in production!
 try:
     from config import *
     DEBUG = DEBUG
 except:
-    DEGUB = True
+    DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -166,3 +168,19 @@ CORS_ORIGIN_WHITELIST = (
     'localhost:8080',
     '127.0.0.1:9000'
 )
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+}
