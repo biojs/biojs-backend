@@ -31,6 +31,9 @@ $ python manage.py migrate
 
 # start the server
 $ python manage.py runserver
+
+# Collect components
+$ python manage.py updatecomponents
 ```
 
 Navigate to [127.0.0.1:8000](http://127.0.0.1:8000/).
