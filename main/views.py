@@ -11,9 +11,6 @@ from django.core.serializers import serialize
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.core.paginator import Paginator, EmptyPage
 import numpy as np
-import logging
-
-logger = logging.getLogger()
 
 def index(request):
     top_downloaded_components = Component.objects.all().only('name', 'id', 'downloads', 'url_name').order_by('-downloads')[:3]
