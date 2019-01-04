@@ -1,30 +1,27 @@
 language: python
 python:
-  - 2.7
+- 2.7
 services:
 - docker
 jobs:
   include:
   - stage: test
-    before_install:
+    before_install: 
     install:
-      - pip install -r requirements.txt
+    - pip install -r requirements.txt
     script:
-      - python manage.py makemigrations
-      - python manage.py migrate
-
+    - python manage.py makemigrations
+    - python manage.py migrate
   - stage: deploy-dev
-    # if: branch = master
     before_script:
     - docker pull philm/ansible_playbook
     - git clone https://github.com/biojs/biojs-backend-ansible.git
     - openssl aes-256-cbc -K $encrypted_cf08b333dbdc_key -iv $encrypted_cf08b333dbdc_iv
       -in deployment-key.enc -out ~/.ssh/id_rsa -d
     script:
-    - docker run -it -v ~/.ssh/id_rsa:/root/.ssh/id_rsa
-      -v "$(pwd)/biojs-backend-ansible":/ansible/playbooks -e DB_USER=$DB_USER -e DB_PASSWORD=$DB_PASSWORD philm/ansible_playbook
-      dev-deploy.yml --private-key=~/.ssh/id_rsa -u ubuntu -i dev_hosts
-
+    - docker run -it -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -v "$(pwd)/biojs-backend-ansible":/ansible/playbooks
+      -e DB_USER=$DB_USER -e DB_PASSWORD=$DB_PASSWORD philm/ansible_playbook dev-deploy.yml
+      --private-key=~/.ssh/id_rsa -u ubuntu -i dev_hosts
   - stage: deploy-production
     if: branch = production
     before_script:
@@ -33,13 +30,12 @@ jobs:
     - openssl aes-256-cbc -K $encrypted_cf08b333dbdc_key -iv $encrypted_cf08b333dbdc_iv
       -in deployment-key.enc -out ~/.ssh/id_rsa -d
     script:
-    - docker run -it -v ~/.ssh/id_rsa:/root/.ssh/id_rsa
-      -v "$(pwd)/biojs-backend-ansible":/ansible/playbooks -e DB_USER=$DB_USER -e DB_PASSWORD=$DB_PASSWORD philm/ansible_playbook
-      dev-production.yml --private-key=~/.ssh/id_rsa -u ubuntu -i production_hosts
-
+    - docker run -it -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -v "$(pwd)/biojs-backend-ansible":/ansible/playbooks
+      -e DB_USER=$DB_USER -e DB_PASSWORD=$DB_PASSWORD philm/ansible_playbook dev-production.yml
+      --private-key=~/.ssh/id_rsa -u ubuntu -i production_hosts
 notifications:
   email: true
 env:
   global:
-  - secure: r3HCwCd5xPZtJBxXPNLMoi6B4EE5XzpeDMZl0kt+5o7H/L9C70TB+gADahxE/MXXORJVAAEVETcWNZDvAFxz7hFXEpnCtkhe+QPAcAPPma6IWve7HVdt5/dW1wYt2/nauHFZU40R2VgLcJR487TiI911nOnJSRnL3Wea3RdwtdDpIWH4jndQYxdzQY5Pso+g12+BZflWbDqXNg3zRt4gKLW2wz3DKXigVC5De43fEID2okmjLVJmqjPYr1lh1eEroytW64icMpVq7J8Hxc0WED0w9WDqG5MAlfPuj2GvEEEh0CFchv15SeJXkrcv/32IPuCqJthnw4Pp/F67YeYLAOPKI2N5ihyc9qCs6/mTSrSn+M3I1mgVqJwZqS7Sf1aHWAB+d42WOAPvzsGP2XZqfnl14z9z708nV7aleMRBJgclnmAIeaCsVDXZRvrxpNWuYz0WWfWfRV2fhmWkPvpY1hqlPxpcCiCEZ7s2HDb5zumX89rfzjFRrFqzL2DRFOJbczKYaIeCpWFPuMQ0C0FmjAfugpTcmTNQ0VGiM4HoeGz6f7M5CEf/WYBe5Ul7MLsu3i5XmttSUk6w2qPBwUNe7cFmFlTpch1HSCx1W/cqaCnc5xapIhTI627GZ/d2L0bQ1pmPcjzOfOksNwM74VSZSfEMDh1hsHWY0L/9yOtalQg=
-  - secure: iY6aA7xsztmRP1YXvJhro2ys/N0f/84/fofU6Z659G7AtREqcWHqVE9yGVnjp6gRd1klaxuz5VBZ0DoxWQkLZle2wlf+HH7mPG/qPPvvhjt+L9eMbH4RHRy/COwo1CRD3e+PIpRE8Y6pMnWFZXnF3yPGfz9yfdTa0zuEKUnEW0IdiUSxeEbv2ycg+dAsQjsna4cfmFsNqkdU1RZ3tGANkLs8rINzeY1OuWPhlpubMZpDV+gIqjS1rBbvbVVTuRING4e0rLI/O09fAIPuppOR0OUWZ1rQh1ePMaLam2tbpKwFP60g3kUdk519X++/xqvtmwrfnLxnFozkqyC0bCETrqBqHbn5/pr71b7+tQJCI7vWbT9NF7nObLRdwxm/Stp65ueYEk6N5kkGKHFLjRhWqeTFy0VhsOODlGzgh/h52RDZsDw9kVbT63vGQ+Tr/Ldj1DcrsztkaH7Ds6lpFwjFfda11DwYSy/BwGDIFtStK/C7E3dwg9JQMydgGi7IXQ6dOftyaav9VZKUDxGjgBSMniYHc0h+XXdzUs1oEM6rt86w+hSbEdWMV3NcaueSHEX8fVQEnEYz860PGkQg6+AJdigB3Vl/uBNzo/vL8A+db0Ouyn2ve3dlxRCRCv7h/Tw0wuwT0STO4Bb3Rlxb3M9irimXNXcpxGUPM+4uXJ0RCYU=
+  - secure: FipxVvaQcL1ZG5eT7AgLil7ofDw7M1q6rxbwha6qO3hx1LiySZuaGK7fJW0iz9aPcF+SjtNCtE2o5zxANXgTAncSrqI/yTYhoPTW6WHfb/m/vustkkoGjtOMZDNRL+UJ2eYB3kKIXFdXnVkWKi8RuKjS38yioLxJs2aJdH/49yuMeY/+wIqGiVBYqG8b5VGl56gcbw9BgntTg9+OVDdz1Yflm8CdLtu2aqS7MIU66OU4H5GNgks+XuBGNfRiPAeyxR/jLkpQXWE0q67n3SKXQEzJEJlYuJNmRl14tcD3wigrm5BLpQwBVuKfS+XYTGYvb4FDh/oyTydGOvm/wFLN439en89YFtpHYVJZnon1G6BMNHbW07X8gnRLHw8jhosEwDHRDYyfCHaxvAz9v4tS00Q7ev6vhHKcpIBzi3vWbO6HXMw4QY8xhRAs84aDX1ZlHeQTJd5n+QJo1yPyumjTBWVWQg1o4k9zOOGU4JyG4IgiNCc8f1zDhw06h7YPhoOumLVhyd1rte1uvLW3Ai4dePUkJSu75YesfSQy4QYFPqao0HqshivpLhqq3zfNMpgqFuRK+27Yuck5FmaOIqDi3QDNGvql5WT/rIIwDKf9SZQHe6OJN+9wjHsta9oSR4QTmmpQm/iSbaUt7hPuU9tC5NzBWGukCTuWpzG8JeajnQs=
+  - secure: W2cTLqSeKqKnF6HaMcZTi6zAlfHHBrX+n5/OPqokUml5pBV3sGaoiBCIL1XYTb34zzYXQ1y8oq1DDW7K4H/+NdOHlLRpooBsiiSbaSv8+BllEfiDT1DtVQRyM5ys8rC1RGDKsMXZJw19ssGppKHaYAF9Beh7+Am415j38cgxZ7AG9vuKq8HlObbe55jrRRSchzEHv+Ttawd8pKvLXstyGagguxlGBpHJAZ01Abhcq0NMYkTCzXvNF9xUOa5262EX/MMJRFp2SWFJR+CnH32SFsHFDBcKIyrXhE6d0srIjB5FFuRzp7TrItk0oLDXhFPTw99t58cRArQsinTBkXwUGCf0XIgyIfu9r49tvy4A5ls12Xsb/vuYXOp8zvR85G75sVFIEmZSHn32qflONjna46/h848UO1z9F5+vq/RkzjPWScHhzFBswcYNeiImYbv9688cvdaD4GSHcPMSPOvQ0Vp2xU+G5uzUnO+ma0CGdG671RSpA5FCoLABOJ2iFUIdu8ProkXMzimz6Z/SYjFqTHGcOYyTPVU5w1NwbxGk6W3HkdeIlLswzwe267fx0GFy3hgchntn+zNevv4tWxHku/EKYghzL3x/4v/vw6x3Cudu4NU8HWwTCetq4zzCC4G+HkamlfUgP6G81cXRLkcNA8kGGEvqvh9lKvFZtfj4rWM=
