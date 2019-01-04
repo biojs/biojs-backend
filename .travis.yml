@@ -20,7 +20,11 @@ jobs:
       -in deployment-key.enc -out ~/.ssh/id_rsa -d
     script:
     - docker run -it -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -v "$(pwd)/biojs-backend-ansible":/ansible/playbooks
-      -e DB_USER=$DB_USER -e DB_PASSWORD=$DB_PASSWORD philm/ansible_playbook dev-deploy.yml
+      -e DB_USER=$DB_USER
+      -e DB_PASSWORD=$DB_PASSWORD
+      -e GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
+      -e GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
+      philm/ansible_playbook dev-deploy.yml
       --private-key=~/.ssh/id_rsa -u ubuntu -i dev_hosts
   - stage: deploy-production
     if: branch = production
@@ -31,7 +35,11 @@ jobs:
       -in deployment-key.enc -out ~/.ssh/id_rsa -d
     script:
     - docker run -it -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -v "$(pwd)/biojs-backend-ansible":/ansible/playbooks
-      -e DB_USER=$DB_USER -e DB_PASSWORD=$DB_PASSWORD philm/ansible_playbook dev-production.yml
+      -e DB_USER=$DB_USER
+      -e DB_PASSWORD=$DB_PASSWORD
+      -e GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
+      -e GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
+      philm/ansible_playbook dev-production.yml
       --private-key=~/.ssh/id_rsa -u ubuntu -i production_hosts
 notifications:
   email: true
@@ -39,3 +47,5 @@ env:
   global:
   - secure: FipxVvaQcL1ZG5eT7AgLil7ofDw7M1q6rxbwha6qO3hx1LiySZuaGK7fJW0iz9aPcF+SjtNCtE2o5zxANXgTAncSrqI/yTYhoPTW6WHfb/m/vustkkoGjtOMZDNRL+UJ2eYB3kKIXFdXnVkWKi8RuKjS38yioLxJs2aJdH/49yuMeY/+wIqGiVBYqG8b5VGl56gcbw9BgntTg9+OVDdz1Yflm8CdLtu2aqS7MIU66OU4H5GNgks+XuBGNfRiPAeyxR/jLkpQXWE0q67n3SKXQEzJEJlYuJNmRl14tcD3wigrm5BLpQwBVuKfS+XYTGYvb4FDh/oyTydGOvm/wFLN439en89YFtpHYVJZnon1G6BMNHbW07X8gnRLHw8jhosEwDHRDYyfCHaxvAz9v4tS00Q7ev6vhHKcpIBzi3vWbO6HXMw4QY8xhRAs84aDX1ZlHeQTJd5n+QJo1yPyumjTBWVWQg1o4k9zOOGU4JyG4IgiNCc8f1zDhw06h7YPhoOumLVhyd1rte1uvLW3Ai4dePUkJSu75YesfSQy4QYFPqao0HqshivpLhqq3zfNMpgqFuRK+27Yuck5FmaOIqDi3QDNGvql5WT/rIIwDKf9SZQHe6OJN+9wjHsta9oSR4QTmmpQm/iSbaUt7hPuU9tC5NzBWGukCTuWpzG8JeajnQs=
   - secure: W2cTLqSeKqKnF6HaMcZTi6zAlfHHBrX+n5/OPqokUml5pBV3sGaoiBCIL1XYTb34zzYXQ1y8oq1DDW7K4H/+NdOHlLRpooBsiiSbaSv8+BllEfiDT1DtVQRyM5ys8rC1RGDKsMXZJw19ssGppKHaYAF9Beh7+Am415j38cgxZ7AG9vuKq8HlObbe55jrRRSchzEHv+Ttawd8pKvLXstyGagguxlGBpHJAZ01Abhcq0NMYkTCzXvNF9xUOa5262EX/MMJRFp2SWFJR+CnH32SFsHFDBcKIyrXhE6d0srIjB5FFuRzp7TrItk0oLDXhFPTw99t58cRArQsinTBkXwUGCf0XIgyIfu9r49tvy4A5ls12Xsb/vuYXOp8zvR85G75sVFIEmZSHn32qflONjna46/h848UO1z9F5+vq/RkzjPWScHhzFBswcYNeiImYbv9688cvdaD4GSHcPMSPOvQ0Vp2xU+G5uzUnO+ma0CGdG671RSpA5FCoLABOJ2iFUIdu8ProkXMzimz6Z/SYjFqTHGcOYyTPVU5w1NwbxGk6W3HkdeIlLswzwe267fx0GFy3hgchntn+zNevv4tWxHku/EKYghzL3x/4v/vw6x3Cudu4NU8HWwTCetq4zzCC4G+HkamlfUgP6G81cXRLkcNA8kGGEvqvh9lKvFZtfj4rWM=
+  - secure: E6y/1hOwG+hO84C8MualWLE17/QZg1czbrLG+0VeJHnvzBrNwJc0RwBBZipT7cUbxTM3JSqeKbK+YiVKZ5WWfxFNtO7X6aTjg1BJJfpa6ko4pe5p1F5BfkUDAlRP8FcY+POXdPEh8/han17U/6MH9l2+HumporYHH0gMLbwwkusKOyMgkzKD+UIZZFr3GampIng9jfedZqixJ3TvSvPG2b/Yzspqa4qztybVwcV7cU/xmT5rxB1SD8N9pjiQkacW5BILaGCXc4810reL1V6IaUBPbqYN4XpYj0T3DJlsE3TQ3m1kK4lvJJ8DUAlOgcXYpFbfLcJT3NvJ7Ft/CIM8Fbub16NF4k5f6DDlMzJc5v5t1VpWODfv5gWEXG9Q2zMTs12eBTMSUi1CzPEGJa7tZfQ5gwPvZUSuly8z2Kpw2o+jakoBJ3ZC9pznxLRkpd+jrOQuPuF4FIOyu/py1bVfZn/ss814LYaaPpfjWMMXK9hDJsBqbQncbZnfCWO9irgv7QGkuzzmZ85otCOCOSizLFAY0qYljWtCZeKnbHAJlPBuC/PT/JqjjRy1zhf2YIK6BHyAV7UxQq2xv3rtDyJbhuGQq9XbPV236ivJvwCzMt7zbp82nkBMkwXEa7cYTB1j4GjRdXIl3CGvd8BXYp6HJJc6iZQ1PWwdclY2Nj+CUGs=
+  - secure: Sknv+U5suurv3TTY32niO2n4vHp5LZZyHmJPu5t3i78k28AcFdA9wpGxuAKxBzPwnCNGs8wh90x+mZLhRdiRirvHKdPps+YXrRtwgVwmCvNxjjZshAP1FNfDhMv6n9uH6lMAO34oQ4DzomrkYtWGsiAyRJ/IDqXX9j7j8XfuKkcMYeFCyQuToQqHt5/hhc4rxwr1Lw2SIC4cti1jz7WjKKpRTOZRXwcQusacBgt0qz/KzdHSU9Y+dpLhHuaD5qOTSGv2QGyQVBkW1L6c/cio8Jkw38geHwH1nRKStDvusMTPd6BFhNRYg9H8rOUPQgxXfA917JNbo9fQGLjqvYCwmSKHw1wBOEkuqOyzO3Bd9DjyZp2jOazvN2PPxoL1OG/IRaCqKLnrAVQRuw+mcuBV9NFDmtFSSMqs00OaUfI8e3csnpXnI2p+HTg1gObAkcQjdMh/4REqqxrjggqq+EoaSF6boev/WjAsvnsy2xQvLc8BKaB4eea3oY1rLZjNAwWO3Lx6uJYh6VZYYIJ5ggeR3Is+EqoH2cM/GqzY78Z263Qp+epDpOrXWbRftQoJZSi2Twn5ge+XC04BBXEYr3EbO8ePCBrRnS0dmhCRaEZ35kQ5STAqDZfKJjeRYMmuWy1cWPhuDSEG5qaMTCWDpm/hhkPaaT81Cegnf/ditrLyJ5A=
