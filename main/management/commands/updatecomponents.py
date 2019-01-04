@@ -176,6 +176,7 @@ class Command(BaseCommand):
                 except urllib2.HTTPError as e:
                     print('Error getting github data!')
                     print(e)
+                    print GITHUB_CLIENT_ID
                     continue
                 except Exception as e:
                     print('Unexpected error accessing Github!')
