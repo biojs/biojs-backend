@@ -23,7 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '$&&+$xz)50khd6q+aq&95r1$2urmmdv37=-*lu3v-wwh46829t'
 
 try:
-    from config import GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
+    from config import *
+    GITHUB_CLIENT_ID = GITHUB_CLIENT_ID
+    GITHUB_CLIENT_SECRET = GITHUB_CLIENT_SECRET
 except:
     GITHUB_CLIENT_ID = ''
     GITHUB_CLIENT_SECRET = ''
