@@ -41,3 +41,9 @@ $ python manage.py updatecomponents
 ```
 
 Navigate to [127.0.0.1:8000](http://127.0.0.1:8000/).
+
+## Settings
+
+### Debugging
+
+Enable debug logs by editing the DEBUG=False setting in `biojs/settings.py`
