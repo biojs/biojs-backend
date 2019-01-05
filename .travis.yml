@@ -15,7 +15,7 @@ jobs:
     if: branch = master
     before_script:
     - docker pull philm/ansible_playbook
-    - git clone https://github.com/biojs/biojs-backend-ansible.git
+    - git clone -b master https://github.com/biojs/biojs-backend-ansible.git
     - openssl aes-256-cbc -K $encrypted_cf08b333dbdc_key -iv $encrypted_cf08b333dbdc_iv
       -in deployment-key.enc -out ~/.ssh/id_rsa -d
     script:
@@ -30,7 +30,7 @@ jobs:
     if: branch = production
     before_script:
     - docker pull philm/ansible_playbook
-    - git clone https://github.com/biojs/biojs-backend-ansible.git
+    - git clone -b production https://github.com/biojs/biojs-backend-ansible.git
     - openssl aes-256-cbc -K $encrypted_cf08b333dbdc_key -iv $encrypted_cf08b333dbdc_iv
       -in deployment-key.enc -out ~/.ssh/id_rsa -d
     script:
