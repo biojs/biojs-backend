@@ -9,6 +9,7 @@ import urllib, json
 from django.core.management import call_command
 from django.core.serializers import serialize
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.core.paginator import Paginator, EmptyPage
 import numpy as np
 
 def index(request):
@@ -36,6 +37,19 @@ def top_components(request):
     return JsonResponse({
         'top_components':top_components.data,
         })
+
+def components(request):
+    size = request.GET.get('size', 20)
+    page = request.GET.get('page', 1)
+    components_list = Component.objects.all().order_by('-modified_time')
+    paginator = Paginator(components_list, size)
+    try:
+        currentPage = paginator.page(page)
+        serialised = TopComponentSerializer(currentPage, many=True)
+        components = serialised.data
+    except EmptyPage:
+        components = []
+    return JsonResponse({ 'components': components })
 
 def component_details(request, url_name):
     component = Component.objects.get(url_name=url_name)

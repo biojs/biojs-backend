@@ -5,6 +5,7 @@ app_name = 'main'
 
 urlpatterns = [
 		url(r'^$', views.index, name="index"),
+		url(r'^components/?$', views.components, name="components"),
 		url(r'^updatedata/$', views.update_data, name="update_data"),
 		url(r'^all/$', views.all_components, name="all_components"),
         url(r'^top/$', views.top_components, name="top_components"),

@@ -5,8 +5,8 @@ services:
     image: biojs-backend-base
     working_dir: /opt
     environment:
-      GITHUB_CLIENT_SECRET: 289807644cc6b4afe50b4bb2c5afcd7056047de0
-      GITHUB_CLIENT_ID: DennisSchwartz
+      GITHUB_CLIENT_SECRET: <token>
+      GITHUB_CLIENT_ID: <user>
     volumes:
       - .:/opt
     ports:

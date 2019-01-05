@@ -29,8 +29,21 @@ $ pip install -r requirements.txt
 # migrate the database
 $ python manage.py migrate
 
+# Create a personal Github access token in settings and use github username for CLIENT_ID
+# export Github credentials to bypass rate limit
+$ export GITHUB_CLIENT_ID=<username> && export GITHUB_CLIENT_SECRET=<token>
+
 # start the server
 $ python manage.py runserver
+
+# Collect components
+$ python manage.py updatecomponents
 ```
 
 Navigate to [127.0.0.1:8000](http://127.0.0.1:8000/).
+
+## Settings
+
+### Debugging
+
+Enable debug logs by editing the DEBUG=False setting in `biojs/settings.py`

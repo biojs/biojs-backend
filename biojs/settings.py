@@ -22,15 +22,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '$&&+$xz)50khd6q+aq&95r1$2urmmdv37=-*lu3v-wwh46829t'
 
-GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID') or ''
-GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET') or ''
+try:
+    from config import *
+    GITHUB_CLIENT_ID = GITHUB_CLIENT_ID
+    GITHUB_CLIENT_SECRET = GITHUB_CLIENT_SECRET
+except:
+    GITHUB_CLIENT_ID = ''
+    GITHUB_CLIENT_SECRET = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 try:
-    from config import *
-    DEBUG = DEBUG
+    from config import DEBUG
 except:
-    DEGUB = True
+    DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -161,8 +165,25 @@ MEDIA_URL = '/backend_media/'
 # CORS settings
 
 CORS_ORIGIN_WHITELIST = (
+    'dev.biojs.net',
     'biojs.net',
     'biojs.io',
     'localhost:8080',
     '127.0.0.1:9000'
 )
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+}
