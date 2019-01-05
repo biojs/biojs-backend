@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '$&&+$xz)50khd6q+aq&95r1$2urmmdv37=-*lu3v-wwh46829t'
 
 try:
-    from config import *
+    from config import GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
     GITHUB_CLIENT_ID = GITHUB_CLIENT_ID
     GITHUB_CLIENT_SECRET = GITHUB_CLIENT_SECRET
 except:
@@ -33,6 +33,7 @@ except:
 # SECURITY WARNING: don't run with debug turned on in production!
 try:
     from config import DEBUG
+    DEBUG = DEBUG
 except:
     DEBUG = False
 
@@ -89,7 +90,7 @@ WSGI_APPLICATION = 'biojs.wsgi.application'
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
 try:
-    from config import *
+    from config import DATABASE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
