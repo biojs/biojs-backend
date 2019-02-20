@@ -27,6 +27,20 @@ def get_npm_data():
     data = json.load(response)
     return data
 
+def get_npm_downloads(url):
+    package=url.split('/')[-1]
+    # dateRange='1980-02-12:'+str(datetime.date(datetime.now()))
+    dateRange='last-week'
+    url='https://api.npmjs.org/downloads/range/'+dateRange+'/'+package
+    hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
+    req = urllib2.Request(url, headers=hdr)
+    response = urllib2.urlopen(req)
+    data = json.load(response)
+    download_count=0
+    for i in data['downloads']:
+        download_count+=i['downloads']
+    return download_count
+
 def send_GET_request(url, user=None, password=None):
     request = urllib2.Request(url)
     if (user is not None and password is not None):
@@ -252,9 +266,9 @@ class Command(BaseCommand):
                 except:
                     print ('Error')
                     continue
-                response = send_GET_request(github_data['downloads_url'], GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
-                downloads_array = json.load(response)
-                _component.downloads = len(downloads_array)
+                # response = send_GET_request(github_data['downloads_url'], GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
+                # downloads_array = json.load(response)
+                _component.downloads = get_npm_downloads(_component.npm_url)
                 _component.commits = commits
                 _component.no_of_contributors = count
                 _component.save()
