@@ -1,10 +1,10 @@
 # biojs-backend
-Backend repository for [biojs.io](biojs.io) website.
+Backend repository for [biojs.net](biojs.net) website.
 
 ## Overview
 
-This repository contains the source code for the backend of [biojs.io](biojs.io) website, maintained by the BioJS organization.
-It uses the [Django](https://www.djangoproject.com/) Framework. It is in its dormant stage right now. This README will be updated along with the progress made. A detailed report can be found on the [BioJS Blog](http://biojs.net/).
+This repository contains the source code for the backend of [biojs.net](biojs.net) website, maintained by the BioJS organization.
+It uses the [Django](https://www.djangoproject.com/) Framework. It is in its dormant stage right now. This README will be updated along with the progress made. A detailed report can be found on the [BioJS Blog](http://blog.biojs.net/).
 
 ## Setup
 
